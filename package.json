@@ -48,6 +48,9 @@
       "**/test/**/*.test.ts"
     ],
     "moduleNameMapper": {
+      "@/env": [
+        "<rootDir>/src/util/env.local"
+      ],
       "^#/(.+)$": "<rootDir>/src/$1"
     },
     "setupFiles": [
