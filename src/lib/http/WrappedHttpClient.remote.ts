@@ -4,7 +4,7 @@ import { InvalidAccessTokenError } from '../../error/http_client'
 /**
  * Wrapper class of UrlFetchApp of GAS.
  */
-export class GasHttpClient implements HttpClient {
+export class WrappedHttpClient implements HttpClient {
     async get(url: string, options?: any): Promise<unknown> {
         const res = UrlFetchApp.fetch(url, options);
         switch (res.getResponseCode()) {
