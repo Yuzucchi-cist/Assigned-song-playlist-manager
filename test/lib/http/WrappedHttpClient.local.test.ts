@@ -1,4 +1,4 @@
-import { WrappedHttpClient } from '#/lib/http/HttpClient.local'
+import { WrappedHttpClient } from '#/lib/http/WrappedHttpClient.local'
 import { InvalidAccessTokenError } from '#/error/http_client';
 
 describe("AxiosHttpClient", () => {
@@ -6,6 +6,7 @@ describe("AxiosHttpClient", () => {
     const http = new WrappedHttpClient();
     describe("get", () => {
         test("Get response.", async () => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const example_res = {
                 "args": {}, 
                 "headers": {
