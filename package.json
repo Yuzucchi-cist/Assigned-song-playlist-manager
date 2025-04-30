@@ -22,6 +22,7 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
+    "@anatine/zod-mock": "^3.14.0",
     "@types/google-apps-script": "^1.0.97",
     "@types/jest": "^29.5.14",
     "esbuild": "^0.25.3",
@@ -51,6 +52,9 @@
       "@/env": [
         "<rootDir>/src/util/env.local"
       ],
+      "@/http": [
+        "<rootDir>/src/lib/http/HttpClient.local"
+      ],
       "^#/(.+)$": "<rootDir>/src/$1"
     },
     "setupFiles": [
@@ -58,6 +62,7 @@
     ]
   },
   "dependencies": {
-    "axios": "^1.9.0"
+    "axios": "^1.9.0",
+    "zod": "^3.24.3"
   }
 }
