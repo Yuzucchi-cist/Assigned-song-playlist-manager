@@ -1,4 +1,6 @@
 import { AxiosHttpClient } from '#/lib/http/HttpClient.local'
+import { InvalidAccessTokenError } from '#/error/http_client';
+
 describe("AxiosHttpClient", () => {
     const httpbin_endpoint = "https://httpbin.org"
     const http = new AxiosHttpClient();
@@ -24,6 +26,8 @@ describe("AxiosHttpClient", () => {
             expect(res).toHaveProperty('url');
             expect((res as {url: string})['url']).toBe("https://httpbin.org/get")
         });
+
+        testErrorResponse((url) => http.get(url));
     });
 
     const example_form = {
@@ -48,6 +52,8 @@ describe("AxiosHttpClient", () => {
             ).toStrictEqual(options.headers['Content-Type']);
             expect((res as {url: string})['url']).toBe("https://httpbin.org/post")
         });
+
+        testErrorResponse((url) => http.post(url));
     });
 
     describe("put", () => {
@@ -64,5 +70,18 @@ describe("AxiosHttpClient", () => {
             ).toStrictEqual(options.headers['Content-Type']);
             expect((res as {url: string})['url']).toBe("https://httpbin.org/put")
         });
+
+        testErrorResponse((url) => http.put(url));
     });
+
+    function testErrorResponse(tested_method: (url: string) => Promise<unknown>) {
+        test("Throw InvalidAccessTokenError if response is 401", async () => {
+            const exec = async () => await tested_method(`${httpbin_endpoint}/status/401`);
+            await expect(exec).rejects.toThrow(new InvalidAccessTokenError());
+        });
+        test("Throw error if response is not 200 or 401", async () => {
+            const exec = async () => await tested_method(`${httpbin_endpoint}/status/404`);
+            await expect(exec).rejects.toThrow(new Error("Request failed with status code 404"));
+        });
+    }
 });

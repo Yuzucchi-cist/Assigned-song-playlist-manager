@@ -7,4 +7,5 @@ export interface HttpClient {
     put(url: string, options?: any): Promise<unknown>;
     delete(url: string, options?: any): Promise<unknown>;
     btoa(data: string): string;
+    makeQueryString(obj: object, encode?: boolean): string; 
 }
