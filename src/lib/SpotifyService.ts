@@ -1,7 +1,7 @@
 import { PlaylistManager } from '../interface/PlaylistManager';
 import { HttpClient } from '../interface/HttpClient';
+import { WrappedHttpClient } from '@/http';
 import { getEnvVar, saveEnvVariable, saveEnvVariables } from '@/env';
-import { GasHttpClient } from './http/HttpClient.remote';
 import { SpotifyAuthTokenResponseSchema, SpotifyPlaylistTracksSchema, SpotifyTracksResponseSchema } from '../validator/spotify';
 import { AsyncResult } from '../type/result';
 import { Song, UnfoundSongs } from '../type/song';
@@ -20,7 +20,7 @@ export class SpotifyService implements PlaylistManager {
     private refresh_token: string | undefined;
     private playlist_url: string;
 
-    constructor(private readonly playlistId: string, private readonly http: HttpClient = new GasHttpClient()) {
+    constructor(private readonly playlistId: string, private readonly http: HttpClient = new WrappedHttpClient()) {
         this.basic_authorization = http.btoa(this.client_id + ":" + this.client_secret);
         this.playlist_url = this.endpoint + `/playlists/${this.playlistId}/tracks`;
     }

@@ -7,7 +7,7 @@ import { SpotifyAuthTokenResponseSchema, SpotifyPlaylistTracksSchema, SpotifySea
 import { getEnvVar } from '#/util/env.local';
 import * as fs from 'fs';
 import path from 'path';
-import { AxiosHttpClient } from '#/lib/http/HttpClient.local';
+import { WrappedHttpClient } from '#/lib/http/HttpClient.local';
 
 let envFilePath: string
 let envFileContent: string
@@ -295,7 +295,7 @@ function generateHttpClientMock(
     putMethod: () => Promise<unknown>,
     deleteMethod: () => Promise<unknown>
 ): HttpClient {
-    const localhttp = new AxiosHttpClient();
+    const localhttp = new WrappedHttpClient();
     return new (jest.fn<HttpClient, []>().mockImplementation(() => ({
         get: getMethod,
         post: postMethod,

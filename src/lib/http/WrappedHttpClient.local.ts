@@ -6,7 +6,7 @@ import { InvalidAccessTokenError } from '#/error/http_client';
 /**
  * Wrapper class of local http test.
  */
-export class AxiosHttpClient implements HttpClient {
+export class WrappedHttpClient implements HttpClient {
     async get(url: string, options?: any): Promise<unknown> {
         return await axios.get(url, options)
             .then((res) => res.data)

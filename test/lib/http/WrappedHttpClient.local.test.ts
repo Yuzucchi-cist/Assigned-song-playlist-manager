@@ -1,9 +1,9 @@
-import { AxiosHttpClient } from '#/lib/http/HttpClient.local'
+import { WrappedHttpClient } from '#/lib/http/HttpClient.local'
 import { InvalidAccessTokenError } from '#/error/http_client';
 
 describe("AxiosHttpClient", () => {
     const httpbin_endpoint = "https://httpbin.org"
-    const http = new AxiosHttpClient();
+    const http = new WrappedHttpClient();
     describe("get", () => {
         test("Get response.", async () => {
             const example_res = {
