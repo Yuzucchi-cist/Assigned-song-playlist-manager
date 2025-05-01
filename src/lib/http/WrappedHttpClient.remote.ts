@@ -1,5 +1,5 @@
-import { HttpClient } from '../../interface/HttpClient';
-import { InvalidAccessTokenError } from '../../error/http_client'
+import { HttpClient } from "../../interface/HttpClient";
+import { InvalidAccessTokenError } from "../../error/http_client";
 
 /**
  * Wrapper class of UrlFetchApp of GAS.
@@ -25,11 +25,11 @@ export class WrappedHttpClient implements HttpClient {
     async post(url: string, options?: any): Promise<unknown> {
         const res = UrlFetchApp.fetch(url, {
             ...options,
-            method: 'post',
+            method: "post",
         });
         switch (res.getResponseCode()) {
             case 200:
-            case 201:   // Response 201 for add item to playlist response
+            case 201: // Response 201 for add item to playlist response
                 return JSON.parse(res.getContentText());
             case 401:
                 throw new InvalidAccessTokenError();
@@ -45,7 +45,7 @@ export class WrappedHttpClient implements HttpClient {
     async put(url: string, options?: any): Promise<unknown> {
         const res = UrlFetchApp.fetch(url, {
             ...options,
-            method: 'put',
+            method: "put",
         });
         switch (res.getResponseCode()) {
             case 200:
@@ -64,7 +64,7 @@ export class WrappedHttpClient implements HttpClient {
     async delete(url: string, options?: any): Promise<unknown> {
         const res = UrlFetchApp.fetch(url, {
             ...options,
-            method: 'delete',
+            method: "delete",
         });
         switch (res.getResponseCode()) {
             case 200:
@@ -83,14 +83,16 @@ export class WrappedHttpClient implements HttpClient {
         return Utilities.base64Encode(data);
     }
 
-    makeQueryString(obj: { [key: string]: string; }, encode?: boolean) {
+    makeQueryString(obj: { [key: string]: string }, encode?: boolean) {
         const encode_value: boolean = encode ? encode : false;
-        return Object.keys(obj).map((key) => {
-            if (encode_value) {
-                return `${key}=${encodeURIComponent(obj[key])}`;
-            } else {
-                return `${key}=${obj[key]}`;
-            }
-        }).join('&');
+        return Object.keys(obj)
+            .map((key) => {
+                if (encode_value) {
+                    return `${key}=${encodeURIComponent(obj[key])}`;
+                } else {
+                    return `${key}=${obj[key]}`;
+                }
+            })
+            .join("&");
     }
-} 
+}
