@@ -1,4 +1,4 @@
-import { Song, UnfoundSongs } from '../type/song';
+import { Song, UnfoundSongs } from "../type/song";
 
 /**
  * Manage each playlist.

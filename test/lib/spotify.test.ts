@@ -3,15 +3,15 @@ import { HttpClient } from '#/interface/HttpClient';
 import { InvalidAccessTokenError } from '#/error/http_client';
 import { Song } from '#/type/song';
 import { generateMock } from '@anatine/zod-mock';
-import { SpotifyAuthTokenResponseSchema, SpotifyPlaylistTracksSchema, SpotifyTracksResponseSchema } from '#/validator/spotify';
+import { SpotifyAuthTokenResponseSchema, SpotifyPlaylistTracksSchema, SpotifySearchItemResponseSchema, SpotifyTrackSchema, SpotifyTracksResponseSchema } from '#/validator/spotify';
 import { getEnvVar } from '#/util/env.local';
 import * as fs from 'fs';
 import path from 'path';
-import { WrappedHttpClient } from '#/lib/http/WrappedHttpClient.local';
+import { WrappedHttpClient } from '#/lib/http/HttpClient.local';
 
 let envFilePath: string
 let envFileContent: string
-let processEnv: NodeJS.ProcessEnv;
+let processEnv: any;
 
 const mocked_playlist_id = "samplePlaylistId";
 const mocked_endpoint = "https://api.sample.com";
@@ -74,7 +74,6 @@ describe("SpotifyService", () => {
             await service.init();
             expect(postMock).toHaveBeenCalledWith(mocked_token_endpoint, access_token_options);
             expect(getTestEnvFromFile("SPOTIFY_ACCESS_TOKEN")).toBe(mocked_access_token);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             expect((service as any).access_token).toBe(mocked_access_token);
         });
 
@@ -83,7 +82,6 @@ describe("SpotifyService", () => {
 
             expect(postMock).toHaveBeenCalledWith(mocked_token_endpoint, access_token_options);
             expect(getTestEnvFromFile("SPOTIFY_REFRESH_TOKEN")).toBe(mocked_refresh_token);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             expect((service as any).refresh_token).toBe(mocked_refresh_token);
         });
 
@@ -95,9 +93,7 @@ describe("SpotifyService", () => {
 
             await service.init();
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             expect((service as any).access_token).toBe(test_access_token);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             expect((service as any).refresh_token).toBe(test_refresh_token);
             expect(postMock).toHaveBeenCalledTimes(0);
         });
@@ -107,7 +103,6 @@ describe("SpotifyService", () => {
 
     describe("refreshPlaylistWith", () => {
         const search_query = {q: songs[0].name_and_artist, type: "track", market: "JP", limit: 10};
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const search_url_and_query = `${mocked_endpoint}/search?${new URLSearchParams(search_query as any).toString()}`
         const playlist_url = `${mocked_endpoint}/playlists/${mocked_playlist_id}/tracks`;
 

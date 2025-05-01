@@ -117,6 +117,7 @@ export class SpotifyService implements PlaylistManager {
     }
 
     private async refreshAccessToken(): Promise<string> {
+        debugger;
         const options = {
             headers: {
                 "Authorization": "Basic " + this.basic_authorization,
@@ -264,7 +265,7 @@ class SpotifyApiClient {
 
     async get(
         url: string,
-        options: {headers: {Authorization: string},},
+        options: {headers: any,},
         refreshAccessToken: () => Promise<string>
     ): Promise<unknown> {
         try {
@@ -280,7 +281,7 @@ class SpotifyApiClient {
     }
     async post(
         url: string,
-        options: {headers: {Authorization: string},},
+        options: {headers: any,},
         refreshAccessToken: () => Promise<string>
     ): Promise<unknown> {
         try {
@@ -296,7 +297,7 @@ class SpotifyApiClient {
     }
     async put(
         url: string,
-        options: {headers: {Authorization: string},},
+        options: {headers: any,},
         refreshAccessToken: () => Promise<string>
     ): Promise<unknown> {
         try {
@@ -313,7 +314,7 @@ class SpotifyApiClient {
 
     async delete(
         url: string,
-        options: {headers: {Authorization: string},},
+        options: {headers: any,},
         refreshAccessToken: () => Promise<string>
     ): Promise<unknown> {
         try {

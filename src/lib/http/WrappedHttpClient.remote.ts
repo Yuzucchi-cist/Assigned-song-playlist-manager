@@ -5,7 +5,6 @@ import { InvalidAccessTokenError } from '../../error/http_client'
  * Wrapper class of UrlFetchApp of GAS.
  */
 export class WrappedHttpClient implements HttpClient {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async get(url: string, options?: any): Promise<unknown> {
         const res = UrlFetchApp.fetch(url, options);
         switch (res.getResponseCode()) {
@@ -21,7 +20,6 @@ export class WrappedHttpClient implements HttpClient {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async post(url: string, options?: any): Promise<unknown> {
         const res = UrlFetchApp.fetch(url, {
             ...options,
@@ -41,7 +39,6 @@ export class WrappedHttpClient implements HttpClient {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async put(url: string, options?: any): Promise<unknown> {
         const res = UrlFetchApp.fetch(url, {
             ...options,
@@ -60,7 +57,6 @@ export class WrappedHttpClient implements HttpClient {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async delete(url: string, options?: any): Promise<unknown> {
         const res = UrlFetchApp.fetch(url, {
             ...options,

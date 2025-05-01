@@ -17,22 +17,16 @@ export function getEnvVar(key: string): string {
  * @param key - The key of enviroment variable to be saved.
  * @param value - The value of enviroment variable to be saved.
  */
-export function saveEnvVariable(
-  key: string,
-  value: string,
-): void {
-  
-  const scriptProperties = PropertiesService.getScriptProperties();
-  scriptProperties.setProperty(key, value);
+export function saveEnvVariable(key: string, value: string): void {
+    const scriptProperties = PropertiesService.getScriptProperties();
+    scriptProperties.setProperty(key, value);
 }
 
 /**
  * Save enviroment variable to .env. If key don't exist, add key.
  * @param variables - Enviroment variables pair of key and value to be saved.
  */
-export function saveEnvVariables(
-  variables: {[key: string]: string}
-): void {
-  const scriptProperties = PropertiesService.getScriptProperties();
-  scriptProperties.setProperties(variables);
+export function saveEnvVariables(variables: { [key: string]: string }): void {
+    const scriptProperties = PropertiesService.getScriptProperties();
+    scriptProperties.setProperties(variables);
 }

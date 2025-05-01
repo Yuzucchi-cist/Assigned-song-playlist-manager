@@ -1,9 +1,10 @@
+import { getEnvVar } from '@/env';
 import { SpotifyService } from './lib/SpotifyService';
 import { Song } from './type/song';
 
 export const App = async () => {
     console.log("Spotify start!!!");
-    const sample_id = "56APHkVBf2Pd73PapsI56q";
+    const sample_id = getEnvVar("SPOTIFY_PLAYLIST_ID");
 
     const sservice = new SpotifyService(sample_id);
     await sservice.init();

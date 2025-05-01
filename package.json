@@ -16,8 +16,7 @@
     "deploy:prod": "npm run build:remote && npm run push:prod",
     "test": "node --env-file=.env.test.local node_modules/.bin/jest --runInBand",
     "test:debug": "node --inspect-brk --env-file=.env.test.local node_modules/.bin/jest --runInBand",
-    "lint": "eslint",
-    "format": "prettier --write src"
+    "lint": "eslint"
   },
   "keywords": [],
   "author": "",
@@ -35,7 +34,6 @@
     "eslint": "^9.25.1",
     "globals": "^16.0.0",
     "jest": "^29.7.0",
-    "prettier": "^3.5.3",
     "ts-jest": "^29.3.2",
     "ts-morph": "^25.0.1",
     "typescript": "^5.8.3",
