@@ -12,52 +12,50 @@ export function getEnvVar(key: string): string {
     return value;
 }
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from "fs";
+import * as path from "path";
 
 /**
  * Save enviroment variable to .env. If key don't exist, add key
  * @param key The key of enviroment variable to be saved.
  * @param value The value of enviroment variable to be saved.
  */
-export function saveEnvVariable(
-  key: string,
-  value: string,
-): void {
-    saveEnvVariables({[key]: value});
+export function saveEnvVariable(key: string, value: string): void {
+    saveEnvVariables({ [key]: value });
 }
 
 /**
  * Save enviroment variable to .env. If key don't exist, add key.
  * @param variables - Enviroment variables pair of key and value to be saved.
  */
-export function saveEnvVariables(
-  variables: {[key: string]: string}
-) {
-    const envFilePath: string = path.join(process.cwd(), '.env.test.local')
+export function saveEnvVariables(variables: { [key: string]: string }) {
+    const envFilePath: string = path.join(process.cwd(), ".env.test.local");
 
-    let content = '';
+    let content = "";
 
     if (fs.existsSync(envFilePath)) {
-        content = fs.readFileSync(envFilePath, 'utf8');
+        content = fs.readFileSync(envFilePath, "utf8");
         Object.keys(variables).forEach((key) => {
             const value = variables[key];
-            const regex = new RegExp(`^${key}=.*`, 'm');
+            const regex = new RegExp(`^${key}=.*`, "m");
 
             if (regex.test(content)) {
                 // Update current keys
                 content = content.replace(regex, `${key}=${value}`);
             } else {
-            // Add new key
-            content += `\n${key}=${value}`;
+                // Add new key
+                content += `\n${key}=${value}`;
             }
         });
-
     } else {
-        Object.keys(variables).forEach((key) => content = `${key}=${variables[key]}`);
+        Object.keys(variables).forEach(
+            (key) => (content = `${key}=${variables[key]}`),
+        );
     }
 
     fs.writeFileSync(envFilePath, content);
 
-    Object.keys(variables).forEach((key) => process.env[key] = variables[key]);
+    Object.keys(variables).forEach(
+        (key) => (process.env[key] = variables[key]),
+    );
 }
