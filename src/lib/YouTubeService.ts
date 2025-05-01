@@ -1,17 +1,20 @@
-import { HttpClient } from '#/interface/HttpClient';
-import { PlaylistManager } from '#/interface/PlaylistManager';
-import { Song, UnfoundSongs } from '#/type/song';
-import { saveEnvVariables } from '#/util/env.local';
-import { GoogleAuthTokenResponseSchema } from '#/validator/googleapis';
-import { getEnvVar, saveEnvVariable } from '@/env';
-import { WrappedHttpClient } from '@/http';
+import { HttpClient } from "#/interface/HttpClient";
+import { PlaylistManager } from "#/interface/PlaylistManager";
+import { Song, UnfoundSongs } from "#/type/song";
+import { saveEnvVariables } from "#/util/env.local";
+import { GoogleAuthTokenResponseSchema } from "#/validator/googleapis";
+import { getEnvVar, saveEnvVariable } from "@/env";
+import { WrappedHttpClient } from "@/http";
 
 export class YouTubeService implements PlaylistManager {
-    private readonly token_endpoint = "https://accounts.google.com/o/oauth2/v2/auth";
+    private readonly token_endpoint =
+        "https://accounts.google.com/o/oauth2/v2/auth";
     private readonly http: HttpClient;
     private readonly client_id = getEnvVar("GOOGLE_CLIENT_ID");
     private readonly client_secret = getEnvVar("GOOGLE_CLIENT_SECRET");
-    private readonly authorization_code = getEnvVar("GOOGLE_AUTHORIZATION_CODE");
+    private readonly authorization_code = getEnvVar(
+        "GOOGLE_AUTHORIZATION_CODE",
+    );
     private access_token: string | undefined;
     private refresh_token: string | undefined;
 
@@ -31,23 +34,24 @@ export class YouTubeService implements PlaylistManager {
             if (this.refresh_token)
                 saveEnvVariables({
                     GOOGLE_ACCESS_TOKEN: this.access_token,
-                    GOOGLE_REFRESH_TOKEN: this.refresh_token
+                    GOOGLE_REFRESH_TOKEN: this.refresh_token,
                 });
-            else
-                saveEnvVariable("GOOGLE_ACCESS_TOKEN", this.access_token);
+            else saveEnvVariable("GOOGLE_ACCESS_TOKEN", this.access_token);
         }
     }
 
     refreshPlaylistWith(songs: Song[]): Promise<UnfoundSongs> {
         songs.toString();
-        throw new Error('Method not implemented.');
+        throw new Error("Method not implemented.");
     }
 
-    private async getFirstAccessToken()
-    : Promise<{ access_token: string, refresh_token: string | undefined }> {
+    private async getFirstAccessToken(): Promise<{
+        access_token: string;
+        refresh_token: string | undefined;
+    }> {
         const options = {
             headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
+                "Content-Type": "application/x-www-form-urlencoded",
             },
             payload: {
                 client_id: this.client_id,
@@ -61,21 +65,22 @@ export class YouTubeService implements PlaylistManager {
         try {
             const response = await this.http.post(this.token_endpoint, options);
             try {
-                const parsed_response = GoogleAuthTokenResponseSchema.parse(response);
+                const parsed_response =
+                    GoogleAuthTokenResponseSchema.parse(response);
 
                 return {
                     access_token: parsed_response.access_token,
-                    refresh_token: parsed_response.refresh_token
+                    refresh_token: parsed_response.refresh_token,
                 };
-            } catch(err) {
+            } catch (err) {
                 console.log("Failed validation: ");
                 throw err;
             }
-        } catch(err) {
+        } catch (err) {
             throw new Error(
                 `Failed get access token: ${err} \n\n` +
-                "Access get authorization code \n" +
-                `https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A//www.googleapis.com/auth/youtube.force-ssl&prompt=consent&include_granted_scopes=true&response_type=code&access_type=offline&redirect_uri=https%3A//example.com/&client_id=${this.client_id}`
+                    "Access get authorization code \n" +
+                    `https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A//www.googleapis.com/auth/youtube.force-ssl&prompt=consent&include_granted_scopes=true&response_type=code&access_type=offline&redirect_uri=https%3A//example.com/&client_id=${this.client_id}`,
             );
         }
     }
