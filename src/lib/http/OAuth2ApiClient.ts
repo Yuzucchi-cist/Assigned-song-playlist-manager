@@ -1,11 +1,46 @@
 import { InvalidAccessTokenError } from "#/error/http_client";
 import { HttpClient } from "#/interface/HttpClient";
 import { WrappedHttpClient } from "@/http";
+import { z } from "zod";
 
 export class OAuth2ApiClient {
     constructor(
         private readonly http_client: HttpClient = new WrappedHttpClient(),
     ) {}
+
+    async getFirstAccessToken(
+        endpoint: string,
+        options: unknown,
+        responseSchema: z.ZodObject<{
+            access_token: z.ZodString;
+            refresh_token: z.ZodOptional<z.ZodString>;
+        }>,
+        get_auth_code_url: string,
+    ): Promise<{
+        access_token: string;
+        refresh_token: string | undefined;
+    }> {
+        try {
+            const response = await this.http_client.post(endpoint, options);
+            try {
+                const parsed_response = responseSchema.parse(response);
+
+                return {
+                    access_token: parsed_response.access_token,
+                    refresh_token: parsed_response.refresh_token,
+                };
+            } catch (err) {
+                console.log("Failed validation: ");
+                throw err;
+            }
+        } catch (err) {
+            throw new Error(
+                `Failed get access token: ${err} \n\n` +
+                    "Access get authorization code \n" +
+                    get_auth_code_url,
+            );
+        }
+    }
 
     noBearerPost(url: string, options?: unknown): Promise<unknown> {
         return this.http_client.post(url, options);
