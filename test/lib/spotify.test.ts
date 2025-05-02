@@ -175,7 +175,26 @@ describe("SpotifyService", () => {
 
             expect(deleteMock).toHaveBeenCalledWith(
                 playlist_url, { ...json_options, payload: JSON.stringify(playlist_tracks)});
-        });        
+        });
+
+        test("Don't remove when playlist is empty.", async () => {
+            const empty_playlist_track_response = {...get_playlist_tracks_response};
+            empty_playlist_track_response.items = [];
+            getMock =
+                jest.fn()
+                    .mockResolvedValueOnce(empty_playlist_track_response)
+                    .mockResolvedValue(mock_tracks_res);
+            postMock = jest.fn().mockResolvedValue(mocked_access_token_response)
+            putMock = jest.fn().mockResolvedValue(undefined);
+            deleteMock = jest.fn().mockResolvedValue({snapshot_id: "abc"});
+            const oauth2_http = new OAuth2ApiClient(generateHttpClientMock(getMock, postMock, putMock, deleteMock));
+            service = generateSpotifyClient(oauth2_http);
+
+            await service.init();
+            await service.refreshPlaylistWith(songs);
+
+            expect(deleteMock).toHaveBeenCalledTimes(0);
+        });
 
         test("Search songs", async () => {
             await service.init();

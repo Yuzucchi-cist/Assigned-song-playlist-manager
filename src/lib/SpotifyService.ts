@@ -66,8 +66,10 @@ export class SpotifyService implements PlaylistManager {
         // Remove all songs in playlist.
         console.log("get start");
         const playlist_track_ids = await this.getPlaylistSongs();
-        console.log("delete start");
-        await this.deletePlaylistSongs(playlist_track_ids);
+        if (playlist_track_ids.length) {
+            console.log("delete start");
+            await this.deletePlaylistSongs(playlist_track_ids);
+        } else  console.log("empty playlist, delete skipped.");
 
         // Search songs and add it to playlist.
         console.log("search start");
