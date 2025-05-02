@@ -43,9 +43,9 @@ export class GoogleApiBase {
             },
             muteHttpExceptions: true,
             payload: {
+                code: this.authorization_code,
                 client_id: this.client_id,
                 client_secret: this.client_secret,
-                code: this.authorization_code,
                 redirect_uri: "http://example.com/",
                 grant_type: "authorization_code",
             },
@@ -54,7 +54,7 @@ export class GoogleApiBase {
             this.token_endpoint,
             options,
             GoogleAuthTokenResponseSchema,
-            `https://accounts.google.com/o/oauth2/v2/auth?scope=https://www.googleapis.com/auth/spreadsheets.readonly&https%3A//www.googleapis.com/auth/youtube.force-ssl&prompt=consent&include_granted_scopes=true&response_type=code&access_type=offline&redirect_uri=https%3A//example.com/&client_id=${this.client_id}`,
+            `https://accounts.google.com/o/oauth2/v2/auth?scope=https://www.googleapis.com/auth/spreadsheets.readonly%20https%3A//www.googleapis.com/auth/youtube.force-ssl&prompt=consent&include_granted_scopes=true&response_type=code&access_type=offline&redirect_uri=https%3A//example.com/&client_id=${this.client_id}`,
         );
     }
 
