@@ -1,15 +1,19 @@
 import { HttpClient } from '#/interface/HttpClient';
 import { WrappedHttpClient } from '#/lib/http/WrappedHttpClient.local';
 import { YouTubeService } from '#/lib/YouTubeService';
-import { GoogleAuthTokenResponseSchema } from '#/validator/googleapis';
+import { GoogleAuthTokenResponseSchema, YouTubePlaylistItemsResponseSchema } from '#/validator/googleapis';
+import { Song } from '#/type/song';
 import { getEnvVar } from '@/env';
 import { generateMock } from '@anatine/zod-mock';
 import * as fs from 'fs';
 import path from 'path';
+import { InvalidAccessTokenError } from '#/error/http_client';
 
 let envFilePath: string
 let envFileContent: string
 let processEnv: NodeJS.ProcessEnv;
+
+const mocked_playlist_id = "playlist_id";
 
 const mocked_endpoint = "https://api.sample.com";
 const mocked_token_endpoint = "https://token.endpoint.com";
@@ -59,6 +63,7 @@ describe("YouTubeService", () => {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
             },
+            muteHttpExceptions: true,
             payload: {
                 client_id: mocked_client_id,
                 client_secret: mocked_client_secret,
@@ -163,7 +168,168 @@ describe("YouTubeService", () => {
     });
 
     describe("refreshPlaylistWith", () => {
+        const songs: Song[] = [{ name: "a", name_and_artist: "b", youtube_video_id: "c"}];
+        
+        const playlist_url = `${mocked_endpoint}/playlistItems`;
 
+        const mocked_playlist_item_response = generateMock(YouTubePlaylistItemsResponseSchema);
+        const mocked_playlist_ids = mocked_playlist_item_response.items.map((item) => item.id);
+
+        const get_options = {
+            "headers": {
+                Authorization: 'Bearer ' + mocked_access_token,
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            muteHttpExceptions: true,
+        };
+
+        const json_options = {
+            "headers": {
+                Authorization: 'Bearer ' + mocked_access_token,
+                "Content-Type": "application/json",
+            },
+            muteHttpExceptions: true,
+        };
+        
+        let getMock: jest.Mock;
+        let postMock: jest.Mock;
+        let putMock: jest.Mock;
+        let deleteMock: jest.Mock;
+
+        let service: YouTubeService;
+
+        beforeEach(() => {
+            getMock =
+                jest.fn().mockResolvedValue(mocked_playlist_item_response);
+            postMock = jest.fn().mockResolvedValue(mocked_access_token_response)
+            putMock = jest.fn().mockResolvedValue(undefined);
+            deleteMock = jest.fn().mockResolvedValue({snapshot_id: "abc"});
+            const http_mock = generateHttpClientMock(getMock, postMock, putMock, deleteMock);
+            service = generateYouTubeService(http_mock);
+        });
+        test("Get playlist songs.", async () => {
+            const get_playlist_url_and_query = `${playlist_url}?part=id&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
+
+            await service.init();
+            await service.refreshPlaylistWith(songs);
+            expect(getMock).toHaveBeenNthCalledWith(1, get_playlist_url_and_query, get_options);
+        });
+
+        test("Remove all songs of playlist.", async () => {
+            const delete_playlist_item_url_and_queries = mocked_playlist_ids.map((id) => `${playlist_url}?id=${id}`);
+
+            await service.init();
+            await service.refreshPlaylistWith(songs);
+
+            delete_playlist_item_url_and_queries.forEach((url_and_query) => expect(deleteMock).toHaveBeenCalledWith(url_and_query, get_options));
+        });
+
+        test("Add songs from video id to playlist.", async () => {
+            const add_url_and_query = `${playlist_url}?part=snippet`
+            const bodies = songs.map((song) => (JSON.stringify({
+                snippet: {
+                    playlistId: mocked_playlist_id,
+                    resourceId: {
+                        kind: "youtube#video",
+                        videoId: song.youtube_video_id,
+                    }
+                }
+            })));
+
+            await service.init();
+            await service.refreshPlaylistWith(songs);
+
+            bodies.forEach((body) => {
+                expect(postMock).toHaveBeenCalledWith(add_url_and_query, { ...json_options, payload: body });
+            });
+        });
+
+        test("All fetch of refreshing playlist", async () => {
+            const get_playlist_url_and_query = `${playlist_url}?part=id&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
+            const delete_playlist_item_url_and_queries = mocked_playlist_ids.map((id) => `${playlist_url}?id=${id}`);
+            const add_url_and_query = `${playlist_url}?part=snippet`
+            const bodies = songs.map((song) => (JSON.stringify({
+                snippet: {
+                    playlistId: mocked_playlist_id,
+                    resourceId: {
+                        kind: "youtube#video",
+                        videoId: song.youtube_video_id,
+                    }
+                }
+            })));
+
+            await service.init();
+            await service.refreshPlaylistWith(songs);
+
+            expect(getMock).toHaveBeenNthCalledWith(1, get_playlist_url_and_query, get_options);
+            delete_playlist_item_url_and_queries.forEach((url_and_query) => expect(deleteMock).toHaveBeenCalledWith(url_and_query, get_options));
+            bodies.forEach((body) => {
+                expect(postMock).toHaveBeenCalledWith(add_url_and_query, { ...json_options, payload: body });
+            });
+        });
+        
+        test("Refresh access token, save refreshed access token and reexec if access token has been expired.", async () => {
+            const mocked_refreshed_access_token_response = { ...mocked_access_token_response };
+            const refreshed_access_token = "refreshed_access_token";
+            mocked_refreshed_access_token_response.access_token = refreshed_access_token;
+
+            const get_playlist_url_and_query = `${playlist_url}?part=id&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
+            const delete_playlist_item_url_and_queries = mocked_playlist_ids.map((id) => `${playlist_url}?id=${id}`);
+            const add_url_and_query = `${playlist_url}?part=snippet`
+            const bodies = songs.map((song) => (JSON.stringify({
+                snippet: {
+                    playlistId: mocked_playlist_id,
+                    resourceId: {
+                        kind: "youtube#video",
+                        videoId: song.youtube_video_id,
+                    }
+                }
+            })));
+
+            getMock =
+                jest.fn().mockRejectedValueOnce(new InvalidAccessTokenError())
+                .mockResolvedValue(mocked_playlist_item_response);
+            postMock = 
+                jest.fn().mockResolvedValueOnce(mocked_access_token_response)
+                .mockResolvedValue(mocked_refreshed_access_token_response);
+            putMock = jest.fn().mockResolvedValue(undefined);
+            deleteMock = jest.fn().mockResolvedValue({snapshot_id: "abc"});
+            const http_mock = generateHttpClientMock(getMock, postMock, putMock, deleteMock);
+            service = generateYouTubeService(http_mock);
+
+            await service.init();
+            await service.refreshPlaylistWith(songs);
+
+            expect(getMock).toHaveBeenNthCalledWith(1, get_playlist_url_and_query, get_options);
+            const refreshed_get_options = {
+                headers: {
+                    Authorization: 'Bearer ' + refreshed_access_token,
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                muteHttpExceptions: true,
+            };
+            expect(getMock).toHaveBeenNthCalledWith(2, get_playlist_url_and_query, refreshed_get_options);
+            
+            const refresh_access_token_options = {
+                headers: { "Content-Type": "application/x-www-form-urlencoded"},
+                payload: `client_id=${mocked_client_id}&client_secret=${mocked_client_secret}&refresh_token=${mocked_refresh_token}&grant_type=refresh_token`,
+                muteHttpExceptions: true,
+            };
+            expect(postMock).toHaveBeenNthCalledWith(2, mocked_token_endpoint, refresh_access_token_options);
+            delete_playlist_item_url_and_queries.forEach((url_and_query) => expect(deleteMock).toHaveBeenCalledWith(url_and_query, refreshed_get_options));
+            const refreshed_json_options = {
+                headers: {
+                    Authorization: 'Bearer ' + refreshed_access_token,
+                    "Content-Type": "application/json"
+                },
+                muteHttpExceptions: true,
+            }
+            bodies.forEach((body) => {
+                expect(postMock).toHaveBeenCalledWith(add_url_and_query, { ...refreshed_json_options, payload: body });
+            });
+
+            expect(getEnvVar("GOOGLE_ACCESS_TOKEN")).toBe(refreshed_access_token);
+        });
     });
 });
 
@@ -175,13 +341,11 @@ function getTestEnvFromFile(key: string): string | null {
 }
 
 function generateYouTubeService(http: HttpClient): YouTubeService {
-    const preservice = new YouTubeService(http);// mocked_playlist_id, http);
+    const preservice = new YouTubeService(mocked_playlist_id, http);
     return Object.defineProperties(preservice, {
         endpoint: {value: mocked_endpoint},
         token_endpoint: {value: mocked_token_endpoint},
-        /*
-        playlist_url: {value: `${mocked_endpoint}/playlists/${mocked_playlist_id}/tracks`},
-    */
+        playlist_url: {value: `${mocked_endpoint}/playlistItems`},
     });
 }
 

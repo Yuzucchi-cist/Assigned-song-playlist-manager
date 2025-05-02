@@ -103,7 +103,7 @@ describe("SpotifyService", () => {
         });
     });
 
-    const songs: Song[] = [{ name: "a", name_and_artist: "b" }];
+    const songs: Song[] = [{ name: "a", name_and_artist: "b", youtube_video_id: "c" }];
 
     describe("refreshPlaylistWith", () => {
         const search_query = {q: songs[0].name_and_artist, type: "track", market: "JP", limit: 10};

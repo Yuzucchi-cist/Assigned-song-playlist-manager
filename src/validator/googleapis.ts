@@ -12,3 +12,31 @@ export const GoogleAuthTokenResponseSchema = z.object({
     scope: z.string().optional(),
     refresh_token: z.string().optional(),
 });
+
+// ********************************
+// YouTube
+// ********************************
+
+/**
+ * YouTube playlist item resource used response.
+ */
+export const YouTubePlaylistItemResourceSchema = z
+    .object({
+        kind: z.string(),
+        etag: z.string(),
+        id: z.string(),
+    })
+    .passthrough();
+
+// Returned response: GET https://www.googleapis.com/youtube/v3/playlistItems
+export const YouTubePlaylistItemsResponseSchema = z.object({
+    kind: z.string(),
+    etag: z.string(),
+    nextPageToken: z.string().nullish(),
+    prevPageToken: z.string().nullish(),
+    pageInfo: z.object({
+        totalResults: z.number(),
+        resultsPerPage: z.number(),
+    }),
+    items: z.array(YouTubePlaylistItemResourceSchema),
+});

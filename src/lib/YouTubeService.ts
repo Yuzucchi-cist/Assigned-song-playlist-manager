@@ -1,12 +1,16 @@
+import { InvalidAccessTokenError } from "#/error/http_client";
 import { HttpClient } from "#/interface/HttpClient";
 import { PlaylistManager } from "#/interface/PlaylistManager";
 import { Song, UnfoundSongs } from "#/type/song";
-import { saveEnvVariables } from "#/util/env.local";
-import { GoogleAuthTokenResponseSchema } from "#/validator/googleapis";
-import { getEnvVar, saveEnvVariable } from "@/env";
+import {
+    GoogleAuthTokenResponseSchema,
+    YouTubePlaylistItemsResponseSchema,
+} from "#/validator/googleapis";
+import { getEnvVar, saveEnvVariable, saveEnvVariables } from "@/env";
 import { WrappedHttpClient } from "@/http";
 
 export class YouTubeService implements PlaylistManager {
+    private readonly endpoint = "https://www.googleapis.com/youtube/v3";
     private readonly token_endpoint =
         "https://accounts.google.com/o/oauth2/v2/auth";
     private readonly http: HttpClient;
@@ -17,9 +21,13 @@ export class YouTubeService implements PlaylistManager {
     );
     private access_token: string | undefined;
     private refresh_token: string | undefined;
+    private youtube_client: YouTubeApiClient;
 
-    constructor(http: HttpClient = new WrappedHttpClient()) {
-        this.http = http;
+    constructor(
+        private readonly playlist_id: string,
+        private readonly http: HttpClient = new WrappedHttpClient(),
+    ) {
+        this.youtube_client = new YouTubeApiClient(http);
     }
 
     async init(): Promise<void> {
@@ -40,9 +48,16 @@ export class YouTubeService implements PlaylistManager {
         }
     }
 
-    refreshPlaylistWith(songs: Song[]): Promise<UnfoundSongs> {
-        songs.toString();
-        throw new Error("Method not implemented.");
+    async refreshPlaylistWith(songs: Song[]): Promise<UnfoundSongs> {
+        // Remove all songs in playlist.
+        console.log("Start to get playlist.");
+        const current_playlist_ids = await this.getPlaylistItems();
+
+        console.log("Srart to delete playlist.");
+        await this.deletePlaylistItems(current_playlist_ids);
+
+        console.log("Srart to add items to playlist.");
+        return await this.addItemsToPlaylist(songs);
     }
 
     private async getFirstAccessToken(): Promise<{
