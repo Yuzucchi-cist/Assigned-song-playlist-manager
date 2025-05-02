@@ -98,7 +98,7 @@ describe("YouTubeService", () => {
             const error_message = 
                     `Failed get access token: ${throwed_error} \n\n` +
                     "Access get authorization code \n" +
-                    `https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A//www.googleapis.com/auth/youtube.force-ssl&prompt=consent&include_granted_scopes=true&response_type=code&access_type=offline&redirect_uri=https%3A//example.com/&client_id=${mocked_client_id}`
+                    `https://accounts.google.com/o/oauth2/v2/auth?scope=https://www.googleapis.com/auth/spreadsheets.readonly%20https%3A//www.googleapis.com/auth/youtube.force-ssl&prompt=consent&include_granted_scopes=true&response_type=code&access_type=offline&redirect_uri=https%3A//example.com/&client_id=${mocked_client_id}`
 
             const exec = () => service.init();
             
