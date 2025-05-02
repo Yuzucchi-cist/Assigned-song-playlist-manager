@@ -85,7 +85,7 @@ export class WrappedHttpClient implements HttpClient {
     }
 
     makeQueryString(obj: { [key: string]: string }, encode?: boolean) {
-        const encode_value: boolean = encode ? encode : false;
+        const encode_value: boolean = encode ? encode : true;
         return Object.keys(obj)
             .map((key) => {
                 if (encode_value) {
