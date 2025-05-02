@@ -38,7 +38,7 @@ describe("SpreadSheetService", () => {
             rowData: [
                 {values: [{formattedValue: "Song0/Artist0", hyperlink: "https://www.youtube.com/watch?v=video_id_0"}]},
                 {values: [{formattedValue: "Song1/Artist1", hyperlink: "https://www.youtube.com/watch?v=video_id_1"}]},
-                {values: [{formattedValue: "Song2/Artist2", hyperlink: "https://www.youtube.com/watch?v=video_id_2"}]},
+                {values: [{formattedValue: "Song2/Artist2", hyperlink: "https://youtu.be/testVideoId?si=s3YiFGS9nunWdRlW"}]},
                 {values: [{formattedValue: "Song3/Artist3", hyperlink: "https://www.youtube.com/watch?v=video_id_3"}]},
             ],
         }]
@@ -57,7 +57,12 @@ describe("SpreadSheetService", () => {
                 return {name: "", name_and_artist: row.values![0].formattedValue!, youtube_video_id: ""};
             } else {
                 const matched_youtube_video_id = /https:\/\/www\.youtube\.com\/watch\?v=(.+)/.exec(row.values![0].hyperlink);
-                const youtube_video_id = matched_youtube_video_id ? matched_youtube_video_id[1] : "";
+                const matched_short_youtube_video_id = /https:\/\/youtu.be\/([^?]+)/.exec(row.values![0].hyperlink);
+                const youtube_video_id = matched_youtube_video_id
+                                            ? matched_youtube_video_id[1]
+                                            : matched_short_youtube_video_id
+                                                ? matched_short_youtube_video_id[1]
+                                                : "";
                 return {name: "", name_and_artist: row.values![0].formattedValue!, youtube_video_id: youtube_video_id};
             }
         }

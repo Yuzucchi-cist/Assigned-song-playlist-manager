@@ -35,9 +35,6 @@ export class SpreadSheetService extends GoogleApiBase {
 
         const parsed_response = SheetResponseSchema.parse(response);
 
-        const youtube_video_id_reg =
-            /^https:\/\/www\.youtube\.com\/watch\?v=([^&]+)/;
-
         const songs: Song[] = parsed_response.sheets[0].data[0].rowData
             .map((row) => {
                 if (
@@ -50,19 +47,33 @@ export class SpreadSheetService extends GoogleApiBase {
                     )
                 )
                     return null;
-                const youtube_video_id = youtube_video_id_reg.exec(
+                const youtube_video_id = this.extractYouTubeVideoId(
                     row.values[0].hyperlink,
                 );
                 return {
                     name: "",
                     name_and_artist: row.values[0].formattedValue,
                     youtube_video_id: youtube_video_id
-                        ? youtube_video_id[1]
+                        ? youtube_video_id
                         : undefined,
                 };
             })
             .filter<Song>((value) => value != null);
 
         return songs;
+    }
+
+    private extractYouTubeVideoId(url: string): string | null {
+        const watch_url_pattern =
+            /^https:\/\/www\.youtube\.com\/watch\?v=([^&]+)/;
+        const short_url_pattern = /^https:\/\/www\.youtu.be\/([^?]+)/;
+
+        const watch_url_matched = watch_url_pattern.exec(url);
+        if (watch_url_matched) return watch_url_matched[1];
+
+        const short_url_matched = short_url_pattern.exec(url);
+        if (short_url_matched) return short_url_matched[1];
+
+        return null;
     }
 }
