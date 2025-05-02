@@ -8,6 +8,7 @@ import { generateMock } from '@anatine/zod-mock';
 import * as fs from 'fs';
 import path from 'path';
 import { InvalidAccessTokenError } from '#/error/http_client';
+import { OAuth2ApiClient } from '#/lib/http/OAuth2ApiClient';
 
 let envFilePath: string
 let envFileContent: string
@@ -331,6 +332,8 @@ describe("YouTubeService", () => {
             expect(getEnvVar("GOOGLE_ACCESS_TOKEN")).toBe(refreshed_access_token);
         });
     });
+
+    // TODO: Check 401 ERROR!!!!!
 });
 
 function getTestEnvFromFile(key: string): string | null {
@@ -341,7 +344,7 @@ function getTestEnvFromFile(key: string): string | null {
 }
 
 function generateYouTubeService(http: HttpClient): YouTubeService {
-    const preservice = new YouTubeService(mocked_playlist_id, http);
+    const preservice = new YouTubeService(mocked_playlist_id, new OAuth2ApiClient(http));
     return Object.defineProperties(preservice, {
         endpoint: {value: mocked_endpoint},
         token_endpoint: {value: mocked_token_endpoint},

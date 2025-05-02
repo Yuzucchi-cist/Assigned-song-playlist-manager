@@ -1,4 +1,4 @@
-import { HttpClient } from "#/interface/HttpClient";
+import { OAuth2ApiClient } from "./http/OAuth2ApiClient";
 import { PlaylistManager } from "#/interface/PlaylistManager";
 import { Song, UnfoundSongs } from "#/type/song";
 import {
@@ -6,8 +6,6 @@ import {
     YouTubePlaylistItemsResponseSchema,
 } from "#/validator/googleapis";
 import { getEnvVar, saveEnvVariable, saveEnvVariables } from "@/env";
-import { WrappedHttpClient } from "@/http";
-import { OAuth2ApiClient } from "./http/OAuth2ApiClient";
 
 export class YouTubeService implements PlaylistManager {
     private readonly endpoint = "https://www.googleapis.com/youtube/v3";
@@ -20,14 +18,11 @@ export class YouTubeService implements PlaylistManager {
     );
     private access_token: string | undefined;
     private refresh_token: string | undefined;
-    private oauth_http: OAuth2ApiClient;
 
     constructor(
         private readonly playlist_id: string,
-        http: HttpClient = new WrappedHttpClient(),
-    ) {
-        this.oauth_http = new OAuth2ApiClient(http);
-    }
+        private readonly oauth_http: OAuth2ApiClient = new OAuth2ApiClient(),
+    ) {}
 
     async init(): Promise<void> {
         try {
