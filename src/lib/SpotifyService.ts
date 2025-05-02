@@ -9,7 +9,7 @@ import {
 } from "../validator/spotify";
 import { AsyncResult } from "../type/result";
 import { Song, UnfoundSongs } from "../type/song";
-import { InvalidAccessTokenError } from "../error/http_client";
+import { OAuth2ApiClient } from "./http/OAuth2ApiClient";
 
 export class SpotifyService implements PlaylistManager {
     private readonly endpoint = "https://api.spotify.com/v1";
@@ -21,7 +21,7 @@ export class SpotifyService implements PlaylistManager {
         "SPOTIFY_AUTHORIZATION_CODE",
     );
     private readonly basic_authorization: string;
-    private readonly spotify_api = new SpotifyApiClient(this.http);
+    private readonly oauth_http = new OAuth2ApiClient(this.http);
     private access_token: string | undefined;
     private refresh_token: string | undefined;
     private playlist_url: string;
@@ -30,7 +30,7 @@ export class SpotifyService implements PlaylistManager {
         private readonly playlistId: string,
         private readonly http: HttpClient = new WrappedHttpClient(),
     ) {
-        this.basic_authorization = http.btoa(
+        this.basic_authorization = this.oauth_http.btoa(
             this.client_id + ":" + this.client_secret,
         );
         this.playlist_url =
@@ -110,7 +110,7 @@ export class SpotifyService implements PlaylistManager {
             muteHttpExceptions: true,
         };
         try {
-            const response: unknown = await this.spotify_api.post(
+            const response: unknown = await this.oauth_http.post(
                 this.token_endpoint,
                 options,
                 this.refreshAccessToken.bind(this),
@@ -147,7 +147,7 @@ export class SpotifyService implements PlaylistManager {
             },
             muteHttpExceptions: true,
         };
-        const response = await this.spotify_api.post(
+        const response = await this.oauth_http.post(
             this.token_endpoint,
             options,
             this.refreshAccessToken,
@@ -176,9 +176,9 @@ export class SpotifyService implements PlaylistManager {
             additional_types: "track",
         };
 
-        const get_playlist_song_url = `${this.playlist_url}?${this.http.makeQueryString(query)}`;
+        const get_playlist_song_url = `${this.playlist_url}?${this.oauth_http.makeQueryString(query)}`;
         try {
-            const response = await this.spotify_api.get(
+            const response = await this.oauth_http.get(
                 get_playlist_song_url,
                 options,
                 this.refreshAccessToken.bind(this),
@@ -217,7 +217,7 @@ export class SpotifyService implements PlaylistManager {
             payload: JSON.stringify(delete_body),
             muteHttpExceptions: true,
         };
-        await this.spotify_api.delete(
+        await this.oauth_http.delete(
             this.playlist_url,
             delete_options,
             this.refreshAccessToken.bind(this),
@@ -247,10 +247,10 @@ export class SpotifyService implements PlaylistManager {
                     limit: 10,
                 };
 
-                const uri = url + `?` + this.http.makeQueryString(query);
+                const uri = url + `?` + this.oauth_http.makeQueryString(query);
 
                 try {
-                    const response = await this.spotify_api.get(
+                    const response = await this.oauth_http.get(
                         uri,
                         options,
                         this.refreshAccessToken.bind(this),
@@ -298,7 +298,7 @@ export class SpotifyService implements PlaylistManager {
         };
 
         try {
-            await this.spotify_api.post(
+            await this.oauth_http.post(
                 this.playlist_url,
                 json_options,
                 this.refreshAccessToken.bind(this),
@@ -306,88 +306,6 @@ export class SpotifyService implements PlaylistManager {
         } catch (err) {
             console.log("Failed post request:");
             throw err;
-        }
-    }
-}
-
-class SpotifyApiClient {
-    constructor(private readonly http_client: HttpClient) {}
-
-    async get(
-        url: string,
-        options: { headers: { Authorization: string } },
-        refreshAccessToken: () => Promise<string>,
-    ): Promise<unknown> {
-        try {
-            return await this.http_client.get(url, options);
-        } catch (err) {
-            if (err instanceof InvalidAccessTokenError) {
-                const refreshed_access_token = await refreshAccessToken();
-                options = { ...options };
-                options.headers = {
-                    ...options.headers,
-                    Authorization: "Bearer " + refreshed_access_token,
-                };
-                return await this.http_client.get(url, options);
-            } else throw err;
-        }
-    }
-    async post(
-        url: string,
-        options: { headers: { Authorization: string } },
-        refreshAccessToken: () => Promise<string>,
-    ): Promise<unknown> {
-        try {
-            return await this.http_client.post(url, options);
-        } catch (err) {
-            if (err instanceof InvalidAccessTokenError) {
-                const refreshed_access_token = await refreshAccessToken();
-                options = { ...options };
-                options.headers = {
-                    ...options.headers,
-                    Authorization: "Bearer " + refreshed_access_token,
-                };
-                return await this.http_client.post(url, options);
-            } else throw err;
-        }
-    }
-    async put(
-        url: string,
-        options: { headers: { Authorization: string } },
-        refreshAccessToken: () => Promise<string>,
-    ): Promise<unknown> {
-        try {
-            return await this.http_client.put(url, options);
-        } catch (err) {
-            if (err instanceof InvalidAccessTokenError) {
-                const refreshed_access_token = await refreshAccessToken();
-                options = { ...options };
-                options.headers = {
-                    ...options.headers,
-                    Authorization: "Bearer " + refreshed_access_token,
-                };
-                return await this.http_client.put(url, options);
-            } else throw err;
-        }
-    }
-
-    async delete(
-        url: string,
-        options: { headers: { Authorization: string } },
-        refreshAccessToken: () => Promise<string>,
-    ): Promise<unknown> {
-        try {
-            return await this.http_client.delete(url, options);
-        } catch (err) {
-            if (err instanceof InvalidAccessTokenError) {
-                const refreshed_access_token = await refreshAccessToken();
-                options = { ...options };
-                options.headers = {
-                    ...options.headers,
-                    Authorization: "Bearer " + refreshed_access_token,
-                };
-                return await this.http_client.delete(url, options);
-            } else throw err;
         }
     }
 }

@@ -1,4 +1,3 @@
-import { InvalidAccessTokenError } from "#/error/http_client";
 import { HttpClient } from "#/interface/HttpClient";
 import { PlaylistManager } from "#/interface/PlaylistManager";
 import { Song, UnfoundSongs } from "#/type/song";
@@ -8,6 +7,7 @@ import {
 } from "#/validator/googleapis";
 import { getEnvVar, saveEnvVariable, saveEnvVariables } from "@/env";
 import { WrappedHttpClient } from "@/http";
+import { OAuth2ApiClient } from "./http/OAuth2ApiClient";
 
 export class YouTubeService implements PlaylistManager {
     private readonly endpoint = "https://www.googleapis.com/youtube/v3";
@@ -20,13 +20,13 @@ export class YouTubeService implements PlaylistManager {
     );
     private access_token: string | undefined;
     private refresh_token: string | undefined;
-    private youtube_client: YouTubeApiClient;
+    private oauth_http: OAuth2ApiClient;
 
     constructor(
         private readonly playlist_id: string,
-        private readonly http: HttpClient = new WrappedHttpClient(),
+        http: HttpClient = new WrappedHttpClient(),
     ) {
-        this.youtube_client = new YouTubeApiClient(http);
+        this.oauth_http = new OAuth2ApiClient(http);
     }
 
     async init(): Promise<void> {
@@ -78,7 +78,7 @@ export class YouTubeService implements PlaylistManager {
         };
 
         try {
-            const response = await this.youtube_client.authPost(
+            const response = await this.oauth_http.noBearerPost(
                 this.token_endpoint,
                 options,
             );
@@ -113,7 +113,7 @@ export class YouTubeService implements PlaylistManager {
         };
 
         const query = `part=id&playlistId=${this.playlist_id}&mine=true&maxResults=50`;
-        const response = await this.youtube_client.get(
+        const response = await this.oauth_http.get(
             `${this.playlist_url}?${query}`,
             options,
             this.refreshAccessToken.bind(this),
@@ -135,7 +135,7 @@ export class YouTubeService implements PlaylistManager {
         };
         console.log("Start to delete playlist items.");
         current_playlist_ids.forEach(async (id) => {
-            await this.youtube_client.delete(
+            await this.oauth_http.delete(
                 `${this.playlist_url}?id=${id}`,
                 options,
                 this.refreshAccessToken.bind(this),
@@ -174,7 +174,7 @@ export class YouTubeService implements PlaylistManager {
                 payload: JSON.stringify(body),
             };
 
-            await this.youtube_client.post(
+            await this.oauth_http.post(
                 `${this.playlist_url}?part=snippet`,
                 json_options,
                 this.refreshAccessToken.bind(this),
@@ -191,7 +191,7 @@ export class YouTubeService implements PlaylistManager {
             payload: `client_id=${this.client_id}&client_secret=${this.client_secret}&refresh_token=${this.refresh_token}&grant_type=refresh_token`,
         };
 
-        const response = await this.youtube_client.authPost(
+        const response = await this.oauth_http.noBearerPost(
             this.token_endpoint,
             options,
         );
@@ -199,93 +199,5 @@ export class YouTubeService implements PlaylistManager {
         this.access_token = parsed_response.access_token;
         saveEnvVariable("GOOGLE_ACCESS_TOKEN", this.access_token);
         return this.access_token;
-    }
-}
-
-class YouTubeApiClient {
-    constructor(private readonly http_client: HttpClient) {}
-
-    authPost(url: string, options: unknown): Promise<unknown> {
-        return this.http_client.post(url, options);
-    }
-
-    async get(
-        url: string,
-        options: { headers: { Authorization: string } },
-        refreshAccessToken: () => Promise<string>,
-    ): Promise<unknown> {
-        try {
-            return await this.http_client.get(url, options);
-        } catch (err) {
-            if (err instanceof InvalidAccessTokenError) {
-                const refreshed_access_token = await refreshAccessToken();
-                options = { ...options };
-                options.headers = {
-                    ...options.headers,
-                    Authorization: "Bearer " + refreshed_access_token,
-                };
-                return await this.http_client.get(url, options);
-            } else throw err;
-        }
-    }
-
-    async post(
-        url: string,
-        options: { headers: { Authorization: string } },
-        refreshAccessToken: () => Promise<string>,
-    ): Promise<unknown> {
-        try {
-            return await this.http_client.post(url, options);
-        } catch (err) {
-            if (err instanceof InvalidAccessTokenError) {
-                const refreshed_access_token = await refreshAccessToken();
-                options = { ...options };
-                options.headers = {
-                    ...options.headers,
-                    Authorization: "Bearer " + refreshed_access_token,
-                };
-                return await this.http_client.post(url, options);
-            } else throw err;
-        }
-    }
-
-    async put(
-        url: string,
-        options: { headers: { Authorization: string } },
-        refreshAccessToken: () => Promise<string>,
-    ): Promise<unknown> {
-        try {
-            return await this.http_client.put(url, options);
-        } catch (err) {
-            if (err instanceof InvalidAccessTokenError) {
-                const refreshed_access_token = await refreshAccessToken();
-                options = { ...options };
-                options.headers = {
-                    ...options.headers,
-                    Authorization: "Bearer " + refreshed_access_token,
-                };
-                return await this.http_client.put(url, options);
-            } else throw err;
-        }
-    }
-
-    async delete(
-        url: string,
-        options: { headers: { Authorization: string } },
-        refreshAccessToken: () => Promise<string>,
-    ): Promise<unknown> {
-        try {
-            return await this.http_client.delete(url, options);
-        } catch (err) {
-            if (err instanceof InvalidAccessTokenError) {
-                const refreshed_access_token = await refreshAccessToken();
-                options = { ...options };
-                options.headers = {
-                    ...options.headers,
-                    Authorization: "Bearer " + refreshed_access_token,
-                };
-                return await this.http_client.delete(url, options);
-            } else throw err;
-        }
     }
 }
