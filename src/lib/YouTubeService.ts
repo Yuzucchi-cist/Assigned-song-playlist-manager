@@ -72,30 +72,12 @@ export class YouTubeService implements PlaylistManager {
             },
         };
 
-        try {
-            const response = await this.oauth_http.noBearerPost(
-                this.token_endpoint,
-                options,
-            );
-            try {
-                const parsed_response =
-                    GoogleAuthTokenResponseSchema.parse(response);
-
-                return {
-                    access_token: parsed_response.access_token,
-                    refresh_token: parsed_response.refresh_token,
-                };
-            } catch (err) {
-                console.log("Failed validation: ");
-                throw err;
-            }
-        } catch (err) {
-            throw new Error(
-                `Failed get access token: ${err} \n\n` +
-                    "Access get authorization code \n" +
-                    `https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A//www.googleapis.com/auth/youtube.force-ssl&prompt=consent&include_granted_scopes=true&response_type=code&access_type=offline&redirect_uri=https%3A//example.com/&client_id=${this.client_id}`,
-            );
-        }
+        return await this.oauth_http.getFirstAccessToken(
+            this.token_endpoint,
+            options,
+            GoogleAuthTokenResponseSchema,
+            `https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A//www.googleapis.com/auth/youtube.force-ssl&prompt=consent&include_granted_scopes=true&response_type=code&access_type=offline&redirect_uri=https%3A//example.com/&client_id=${this.client_id}`,
+        );
     }
 
     private async getPlaylistItems(): Promise<string[]> {

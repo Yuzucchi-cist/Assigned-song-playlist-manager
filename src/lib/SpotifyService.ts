@@ -6,7 +6,6 @@ import {
     SpotifyPlaylistTracksSchema,
     SpotifyTracksResponseSchema,
 } from "../validator/spotify";
-import { AsyncResult } from "../type/result";
 import { Song, UnfoundSongs } from "../type/song";
 
 export class SpotifyService implements PlaylistManager {
@@ -44,16 +43,8 @@ export class SpotifyService implements PlaylistManager {
             if (!this.access_token.length) throw new Error();
         } catch {
             const result = await this.getFirstAccessTokenAndRefreshToken();
-            if (result.ok) {
-                this.access_token = result.value.access_token;
-                this.refresh_token = result.value.refresh_token;
-            } else {
-                throw new Error(
-                    `Failed get access token: ${result.error} \n\n
-                    Access get authorization code \n
-                    https://accounts.spotify.com/authorize?response_type=code&scope=playlist-modify-public%20user-read-private&redirect_uri=https://example.com/callback&client_id=${this.client_id}`,
-                );
-            }
+            this.access_token = result.access_token;
+            this.refresh_token = result.refresh_token;
 
             if (this.refresh_token)
                 saveEnvVariables({
@@ -88,7 +79,7 @@ export class SpotifyService implements PlaylistManager {
         return unfound_songs;
     }
 
-    private async getFirstAccessTokenAndRefreshToken(): AsyncResult<{
+    private async getFirstAccessTokenAndRefreshToken(): Promise<{
         access_token: string;
         refresh_token: string | undefined;
     }> {
@@ -106,30 +97,12 @@ export class SpotifyService implements PlaylistManager {
             headers: headers,
             muteHttpExceptions: true,
         };
-        try {
-            const response: unknown = await this.oauth_http.post(
-                this.token_endpoint,
-                options,
-                this.refreshAccessToken.bind(this),
-            );
-            try {
-                const parsedResponse =
-                    SpotifyAuthTokenResponseSchema.parse(response);
-                return {
-                    ok: true,
-                    value: {
-                        access_token: parsedResponse.access_token,
-                        refresh_token: parsedResponse.refresh_token,
-                    },
-                };
-            } catch (err) {
-                console.log("Failed validation:");
-                throw err;
-            }
-        } catch (err) {
-            console.error("Failed request:", err);
-            return { ok: false, error: err };
-        }
+        return this.oauth_http.getFirstAccessToken(
+            this.token_endpoint,
+            options,
+            SpotifyAuthTokenResponseSchema,
+            "https://accounts.spotify.com/authorize?response_type=code&scope=playlist-modify-public%20user-read-private&redirect_uri=https://example.com/callback&client_id=${this.client_id}",
+        );
     }
 
     private async refreshAccessToken(): Promise<string> {
