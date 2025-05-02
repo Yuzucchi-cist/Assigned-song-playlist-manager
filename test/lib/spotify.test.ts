@@ -8,6 +8,7 @@ import { getEnvVar } from '#/util/env.local';
 import * as fs from 'fs';
 import path from 'path';
 import { WrappedHttpClient } from '#/lib/http/WrappedHttpClient.local';
+import { OAuth2ApiClient } from '#/lib/http/OAuth2ApiClient';
 
 let envFilePath: string
 let envFileContent: string
@@ -56,12 +57,12 @@ describe("SpotifyService", () => {
         const postMock = jest.fn().mockResolvedValue(mocked_access_token_response)
         const putMock = jest.fn().mockResolvedValue(undefined)
         const deleteMock = jest.fn().mockResolvedValue(undefined)
-        const httpMock = generateHttpClientMock(getMock, postMock, putMock, deleteMock);
-
+        ;
+        const oauth2_http = new OAuth2ApiClient(generateHttpClientMock(getMock, postMock, putMock, deleteMock));
         let service: SpotifyService;
 
         beforeEach(() => {
-            service = generateSpotifyClient(httpMock);
+            service = generateSpotifyClient(oauth2_http);
         });
 
         afterEach(() => {
@@ -149,8 +150,8 @@ describe("SpotifyService", () => {
             postMock = jest.fn().mockResolvedValue(mocked_access_token_response)
             putMock = jest.fn().mockResolvedValue(undefined);
             deleteMock = jest.fn().mockResolvedValue({snapshot_id: "abc"});
-            const http_mock = generateHttpClientMock(getMock, postMock, putMock, deleteMock);
-            service = generateSpotifyClient(http_mock);
+            const oauth2_http = new OAuth2ApiClient(generateHttpClientMock(getMock, postMock, putMock, deleteMock));
+            service = generateSpotifyClient(oauth2_http);
         });
 
         afterEach(() => {
@@ -220,16 +221,16 @@ describe("SpotifyService", () => {
             const mocked_refreshed_access_token_response = {...mocked_access_token_response};
             mocked_refreshed_access_token_response.access_token = mocked_refreshed_access_token;
             const getMock =
-            jest.fn()
-                .mockRejectedValueOnce(new InvalidAccessTokenError())
-                .mockResolvedValueOnce(get_playlist_tracks_response)
-                .mockResolvedValue(mock_tracks_res);
+                jest.fn()
+                    .mockRejectedValueOnce(new InvalidAccessTokenError())
+                    .mockResolvedValueOnce(get_playlist_tracks_response)
+                    .mockResolvedValue(mock_tracks_res);
             const postMock =
             jest.fn()
                 .mockResolvedValueOnce(mocked_access_token_response)
                 .mockResolvedValue(mocked_refreshed_access_token_response);
-            const http_mock = generateHttpClientMock(getMock, postMock, putMock, deleteMock);
-            const service = generateSpotifyClient(http_mock);
+            const oauth2_http = new OAuth2ApiClient(generateHttpClientMock(getMock, postMock, putMock, deleteMock));
+            const service = generateSpotifyClient(oauth2_http);
 
             await service.init();
             await service.refreshPlaylistWith(songs);
@@ -285,8 +286,8 @@ function getTestEnvFromFile(key: string): string | null {
     return matched ? matched[1]: null;
 }
 
-function generateSpotifyClient(http: HttpClient): SpotifyService {
-    const preservice = new SpotifyService(mocked_playlist_id, http);
+function generateSpotifyClient(oauth2_http: OAuth2ApiClient): SpotifyService {
+    const preservice = new SpotifyService(mocked_playlist_id, oauth2_http);
     return Object.defineProperties(preservice, {
         endpoint: {value: mocked_endpoint},
         token_endpoint: {value: mocked_token_endpoint},

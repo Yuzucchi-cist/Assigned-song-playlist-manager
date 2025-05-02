@@ -1,6 +1,5 @@
+import { OAuth2ApiClient } from "./http/OAuth2ApiClient";
 import { PlaylistManager } from "../interface/PlaylistManager";
-import { HttpClient } from "../interface/HttpClient";
-import { WrappedHttpClient } from "@/http";
 import { getEnvVar, saveEnvVariable, saveEnvVariables } from "@/env";
 import {
     SpotifyAuthTokenResponseSchema,
@@ -9,7 +8,6 @@ import {
 } from "../validator/spotify";
 import { AsyncResult } from "../type/result";
 import { Song, UnfoundSongs } from "../type/song";
-import { OAuth2ApiClient } from "./http/OAuth2ApiClient";
 
 export class SpotifyService implements PlaylistManager {
     private readonly endpoint = "https://api.spotify.com/v1";
@@ -21,14 +19,13 @@ export class SpotifyService implements PlaylistManager {
         "SPOTIFY_AUTHORIZATION_CODE",
     );
     private readonly basic_authorization: string;
-    private readonly oauth_http = new OAuth2ApiClient(this.http);
     private access_token: string | undefined;
     private refresh_token: string | undefined;
     private playlist_url: string;
 
     constructor(
         private readonly playlistId: string,
-        private readonly http: HttpClient = new WrappedHttpClient(),
+        private readonly oauth_http = new OAuth2ApiClient(),
     ) {
         this.basic_authorization = this.oauth_http.btoa(
             this.client_id + ":" + this.client_secret,
