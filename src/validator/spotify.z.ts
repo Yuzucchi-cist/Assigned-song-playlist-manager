@@ -36,25 +36,25 @@ export const SpotifySearchItemResponseSchema = z.object({
 /**
  * Spotify API response of Track
  */
-export const SpotifyTrackSchema = z
-    .object({
-        id: z.string(),
-        name: z.string(),
-        artists: z.array(
-            z
-                .object({
-                    name: z.string(),
-                })
-                .passthrough(), // nameだけ検証、他は無視
-        ),
-    })
-    .passthrough(); // id, name, artistsだけ検証、他のフィールドは無視
+export const SpotifyTrackSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    artists: z.array(
+        z.object({
+            name: z.string(),
+        }).passthrough(), // nameだけ検証、他は無視
+    ),
+}).passthrough(); // id, name, artistsだけ検証、他のフィールドは無視
 
 /**
  * Spotify API response of Playlist Items
  */
 export const SpotifyPlaylistTracksSchema = z.object({
-    items: z.array(z.object({ track: SpotifyTrackSchema })),
+    items: z.array(
+        z.object({
+            track: SpotifyTrackSchema
+        })
+    ),
 });
 
 /**
