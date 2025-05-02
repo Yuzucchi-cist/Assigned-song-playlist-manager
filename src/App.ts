@@ -1,20 +1,33 @@
-import { SpotifyService } from "./lib/SpotifyService";
-import { Song } from "./type/song";
+import { getEnvVar } from '@/env';
+import { SpreadSheetService } from "./lib/googleapis/SpreadSheetService";
+import { SpotifyService } from './lib/SpotifyService';
+import { YouTubeService } from "./lib/YouTubeService";
 
 export const App = async () => {
     console.log("Spotify start!!!");
-    const sample_id = "56APHkVBf2Pd73PapsI56q";
+    const sample_id = getEnvVar("SPOTIFY_PLAYLIST_ID");
+    const sample_youtube_id = getEnvVar("YOUTUBE_PLAYLIST_ID");
+    const sample_sheet_id = getEnvVar("SPREADSHEET_SHEET_ID");
 
     const sservice = new SpotifyService(sample_id);
     await sservice.init();
     console.log("SpotifyService initted.");
-    const songs: Song[] = [
-        {
-            name: "完全感覚Dreamer",
-            name_and_artist: "完全感覚ドリーマー/ONE OK ROCK",
-        },
-        { name: "立ち上がリーヨ", name_and_artist: "立ち上がリーヨ/T-Pistonz" },
-    ];
+
+    const yservice = new YouTubeService(sample_youtube_id);
+    await yservice.init();
+    console.log("YouTubeService initted.");
+
+    const spservice = new SpreadSheetService(sample_sheet_id);
+    spservice.init();
+    console.log("SpreadSheetService initted.");
+
+    console.log("Start get assigned songs.");
+    const songs = await spservice.getAssignedSongs();
+    console.log(`Got:\n${songs}`);
+
     await sservice.refreshPlaylistWith(songs);
-    console.log("Playlist refreshed.");
+    console.log("SpotifyPlaylist refreshed.");
+
+    await yservice.refreshPlaylistWith(songs);
+    console.log("YouTubePlaylist refreshed.");
 };

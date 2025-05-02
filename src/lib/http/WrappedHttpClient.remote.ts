@@ -68,6 +68,7 @@ export class WrappedHttpClient implements HttpClient {
         });
         switch (res.getResponseCode()) {
             case 200:
+            case 204: // Response 204 for delete playlist item response.
                 return JSON.parse(res.getContentText());
             case 401:
                 throw new InvalidAccessTokenError();
@@ -84,7 +85,7 @@ export class WrappedHttpClient implements HttpClient {
     }
 
     makeQueryString(obj: { [key: string]: string }, encode?: boolean) {
-        const encode_value: boolean = encode ? encode : false;
+        const encode_value: boolean = encode ? encode : true;
         return Object.keys(obj)
             .map((key) => {
                 if (encode_value) {
