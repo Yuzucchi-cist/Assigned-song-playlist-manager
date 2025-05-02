@@ -1,6 +1,6 @@
-import { getEnvVar } from '@/env';
+import { getEnvVar } from "@/env";
 import { SpreadSheetService } from "./lib/googleapis/SpreadSheetService";
-import { SpotifyService } from './lib/SpotifyService';
+import { SpotifyService } from "./lib/SpotifyService";
 import { YouTubeService } from "./lib/YouTubeService";
 
 export const App = async () => {

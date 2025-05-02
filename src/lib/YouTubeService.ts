@@ -1,7 +1,7 @@
 import { OAuth2ApiClient } from "./http/OAuth2ApiClient";
 import { PlaylistManager } from "#/interface/PlaylistManager";
 import { Song, UnfoundSongs } from "#/type/song";
-import { YouTubePlaylistItemsResponseSchema } from "#/validator/googleapis";
+import { YouTubePlaylistItemsResponseSchema } from "#/validator/googleapis.z";
 import { GoogleApiBase } from "./googleapis/GoogleApisBase";
 
 export class YouTubeService extends GoogleApiBase implements PlaylistManager {

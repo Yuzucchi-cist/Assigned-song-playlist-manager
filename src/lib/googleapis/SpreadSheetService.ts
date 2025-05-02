@@ -1,7 +1,7 @@
 import { OAuth2ApiClient } from "../http/OAuth2ApiClient";
 import { GoogleApiBase } from "./GoogleApisBase";
 import { Song } from "#/type/song";
-import { SheetResponseSchema } from "#/validator/googleapis";
+import { SheetResponseSchema } from "#/validator/googleapis.z";
 
 export class SpreadSheetService extends GoogleApiBase {
     private readonly endpoint = "https://sheets.googleapis.com/v4";

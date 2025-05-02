@@ -3,7 +3,7 @@ import { HttpClient } from '#/interface/HttpClient';
 import { InvalidAccessTokenError } from '#/error/http_client';
 import { Song } from '#/type/song';
 import { generateMock } from '@anatine/zod-mock';
-import { SpotifyAuthTokenResponseSchema, SpotifyPlaylistTracksSchema, SpotifyTracksResponseSchema } from '#/validator/spotify';
+import { SpotifyAuthTokenResponseSchema, SpotifyPlaylistTracksSchema, SpotifyTracksResponseSchema } from '#/validator/spotify.z';
 import { getEnvVar } from '#/util/env.local';
 import * as fs from 'fs';
 import path from 'path';

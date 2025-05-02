@@ -1,7 +1,7 @@
 import { HttpClient } from '#/interface/HttpClient';
 import { WrappedHttpClient } from '#/lib/http/WrappedHttpClient.local';
 import { YouTubeService } from '#/lib/YouTubeService';
-import { GoogleAuthTokenResponseSchema, YouTubePlaylistItemsResponseSchema } from '#/validator/googleapis';
+import { GoogleAuthTokenResponseSchema, YouTubePlaylistItemsResponseSchema } from '#/validator/googleapis.z';
 import { Song } from '#/type/song';
 import { getEnvVar } from '@/env';
 import { generateMock } from '@anatine/zod-mock';

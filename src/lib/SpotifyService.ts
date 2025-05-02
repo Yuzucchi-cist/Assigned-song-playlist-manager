@@ -5,7 +5,7 @@ import {
     SpotifyAuthTokenResponseSchema,
     SpotifyPlaylistTracksSchema,
     SpotifyTracksResponseSchema,
-} from "../validator/spotify";
+} from "../validator/spotify.z";
 import { Song, UnfoundSongs } from "../type/song";
 
 export class SpotifyService implements PlaylistManager {
@@ -69,7 +69,7 @@ export class SpotifyService implements PlaylistManager {
         if (playlist_track_ids.length) {
             console.log("delete start");
             await this.deletePlaylistSongs(playlist_track_ids);
-        } else  console.log("empty playlist, delete skipped.");
+        } else console.log("empty playlist, delete skipped.");
 
         // Search songs and add it to playlist.
         console.log("search start");

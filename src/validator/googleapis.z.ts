@@ -25,8 +25,7 @@ export const YouTubePlaylistItemResourceSchema = z
         kind: z.string(),
         etag: z.string(),
         id: z.string(),
-    })
-    .passthrough();
+    }).passthrough();
 
 // Returned response: GET https://www.googleapis.com/youtube/v3/playlistItems
 export const YouTubePlaylistItemsResponseSchema = z.object({
@@ -48,36 +47,28 @@ export const YouTubePlaylistItemsResponseSchema = z.object({
 /**
  * SpreadSheet cell value used response.
  */
-const CellValueSchema = z
-    .object({
+const CellValueSchema = z .object({
         formattedValue: z.string().nullish(),
         hyperlink: z.string().nullish(),
-    })
-    .passthrough();
+    }).passthrough();
 
 /**
  * SpreadSheet cell value used response.
  */
-export const rowDataSchema = z
-    .object({
+export const rowDataSchema = z.object({
         values: z.array(CellValueSchema).optional(),
-    })
-    .passthrough();
+    }).passthrough();
 
 /**
  * SpreadSheet sheet value used response.
  */
-export const SheetValueSchema = z
-    .object({
+export const SheetValueSchema = z.object({
         data: z.array(
-            z
-                .object({
-                    rowData: z.array(rowDataSchema),
-                })
-                .passthrough(),
+            z.object({
+                rowData: z.array(rowDataSchema),
+            }).passthrough(),
         ),
-    })
-    .passthrough();
+    }).passthrough();
 
 /**
  * SpreadSheet sheet response: POST https://sheets.googleapis.com/v4/spreadsheets/${sheet_id}/?query
