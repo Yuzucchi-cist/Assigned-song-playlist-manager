@@ -1,7 +1,7 @@
 import { HttpClient } from '#/interface/HttpClient';
 import { WrappedHttpClient } from '#/util/http/WrappedHttpClient.local';
 import { YouTubeService } from '#/lib/googleapis/YouTubeService';
-import { GoogleAuthTokenResponseSchema, YouTubePlaylistItemsResponseSchema } from '#/validator/googleapis.z';
+import { GoogleAuthTokenResponseSchema, YouTubePlaylistItemResourceSchema, YouTubePlaylistItemsResponseSchema } from '#/validator/googleapis.z';
 import { Song } from '#/type/song';
 import { getEnvVar } from '@/env';
 import { generateMock } from '@anatine/zod-mock';
@@ -169,12 +169,30 @@ describe("YouTubeService", () => {
     });
 
     describe("refreshPlaylistWith", () => {
-        const songs: Song[] = [{ name: "a", name_and_artist: "b", youtube_video_id: "c"}];
+        // old playlist: video_id_0 to video_id_3
+        // new playlist: video_id_2 to video_id_5
+        // playlist to reduce: video_id_0, video_id_1
+        // playlist not to touch: video_id_2, video_id_3
+        // playlist to add: video_id_4, video_id_5
+        const songs: Song[] = [...Array(4)].map((_, num) => ({name: `name_${num+2}`, name_and_artist: `n_and_a_${num+2}`, youtube_video_id: `video_id_${num+2}`}));
+        const old_playlist_ids = [...Array(4)].map((_, num) => `playlist_${num}`);
+        const old_video_ids = [...Array(4)].map((_, num) => `video_id_${num}`);
+        const video_ids_to_reduce = [...Array(2)].map((_, num) => `video_id_${num}`);
+        const video_not_to_touch = [...Array(2)].map((_, num) => `video_id_${num+2}`);
+        const video_ids_to_add = [...Array(2)].map((_, num) => `video_id_${num+4}`);
+
         
         const playlist_url = `${mocked_endpoint}/playlistItems`;
 
-        const mocked_playlist_item_response = generateMock(YouTubePlaylistItemsResponseSchema);
-        const mocked_playlist_ids = mocked_playlist_item_response.items.map((item) => item.id);
+        const playlist_resource_items = [...Array(4)].map(
+            (_, i) => ({
+                ...generateMock(YouTubePlaylistItemResourceSchema),
+                id: old_playlist_ids[i],
+                snippet: {resourceId: {kind: "test_kind", videoId: old_video_ids[i]}}
+            })
+        );
+
+        const mocked_playlist_item_response = { ...generateMock(YouTubePlaylistItemsResponseSchema), items: playlist_resource_items};
 
         const get_options = {
             "headers": {
@@ -217,7 +235,7 @@ describe("YouTubeService", () => {
         });
 
         test("Remove all songs of playlist.", async () => {
-            const delete_playlist_item_url_and_queries = mocked_playlist_ids.map((id) => `${playlist_url}?id=${id}`);
+            const delete_playlist_item_url_and_queries = old_playlist_ids.map((id) => `${playlist_url}?id=${id}`);
 
             await service.init();
             await service.refreshPlaylistWith(songs);
@@ -247,7 +265,7 @@ describe("YouTubeService", () => {
 
         test("All fetch of refreshing playlist", async () => {
             const get_playlist_url_and_query = `${playlist_url}?part=id&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
-            const delete_playlist_item_url_and_queries = mocked_playlist_ids.map((id) => `${playlist_url}?id=${id}`);
+            const delete_playlist_item_url_and_queries = old_playlist_ids.map((id) => `${playlist_url}?id=${id}`);
             const add_url_and_query = `${playlist_url}?part=snippet`
             const bodies = songs.map((song) => (JSON.stringify({
                 snippet: {
@@ -275,7 +293,7 @@ describe("YouTubeService", () => {
             mocked_refreshed_access_token_response.access_token = refreshed_access_token;
 
             const get_playlist_url_and_query = `${playlist_url}?part=id&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
-            const delete_playlist_item_url_and_queries = mocked_playlist_ids.map((id) => `${playlist_url}?id=${id}`);
+            const delete_playlist_item_url_and_queries = old_playlist_ids.map((id) => `${playlist_url}?id=${id}`);
             const add_url_and_query = `${playlist_url}?part=snippet`
             const bodies = songs.map((song) => (JSON.stringify({
                 snippet: {
