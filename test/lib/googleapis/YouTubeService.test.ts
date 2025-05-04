@@ -296,15 +296,15 @@ describe("YouTubeService", () => {
         });
 
         test("All fetch of refreshing playlist", async () => {
-            const get_playlist_url_and_query = `${playlist_url}?part=id&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
-            const delete_playlist_item_url_and_queries = old_playlist_item_ids.map((id) => `${playlist_url}?id=${id}`);
+            const get_playlist_url_and_query = `${playlist_url}?part=id,snippet&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
+            const delete_playlist_item_url_and_queries = playlist_item_ids_to_reduce.map((id) => `${playlist_url}?id=${id}`);
             const add_url_and_query = `${playlist_url}?part=snippet`
-            const bodies = songs.map((song) => (JSON.stringify({
+            const bodies = video_ids_to_add.map((video_id) => (JSON.stringify({
                 snippet: {
                     playlistId: mocked_playlist_id,
                     resourceId: {
                         kind: "youtube#video",
-                        videoId: song.youtube_video_id,
+                        videoId: video_id,
                     }
                 }
             })));
@@ -324,15 +324,15 @@ describe("YouTubeService", () => {
             const refreshed_access_token = "refreshed_access_token";
             mocked_refreshed_access_token_response.access_token = refreshed_access_token;
 
-            const get_playlist_url_and_query = `${playlist_url}?part=id&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
-            const delete_playlist_item_url_and_queries = old_playlist_item_ids.map((id) => `${playlist_url}?id=${id}`);
+            const get_playlist_url_and_query = `${playlist_url}?part=id,snippet&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
+            const delete_playlist_item_url_and_queries = playlist_item_ids_to_reduce.map((id) => `${playlist_url}?id=${id}`);
             const add_url_and_query = `${playlist_url}?part=snippet`
-            const bodies = songs.map((song) => (JSON.stringify({
+            const bodies = video_ids_to_add.map((video_id) => (JSON.stringify({
                 snippet: {
                     playlistId: mocked_playlist_id,
                     resourceId: {
                         kind: "youtube#video",
-                        videoId: song.youtube_video_id,
+                        videoId: video_id,
                     }
                 }
             })));
