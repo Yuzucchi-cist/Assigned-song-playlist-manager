@@ -36,7 +36,7 @@ describe("OAuth2ApiClient", () => {
             const httpMock = generateHttpClientMock(getMock, postMock, putMock, deleteMock, btoaMock, makeQueryStringMock);
             oauth2 = new OAuth2ApiClient(httpMock)
 
-            test.only("noBearer deligates http client post.", async () => {
+            test("noBearer deligates http client post.", async () => {
                 const url = "test_url";
                 const options = {headers: "test_header", payload: "test_payload"};
                 postMock.mockResolvedValue(test_response);
@@ -63,7 +63,7 @@ describe("OAuth2ApiClient", () => {
         });
     });
 
-    describe.only("other method of http request.", () => {
+    describe("other method of http request.", () => {
         beforeEach(() => {
             const httpMock = generateHttpClientMock(getMock, postMock, putMock, deleteMock, btoaMock, makeQueryStringMock);
             oauth2 = new OAuth2ApiClient(httpMock)
