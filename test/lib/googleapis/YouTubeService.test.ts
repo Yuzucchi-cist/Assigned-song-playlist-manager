@@ -181,6 +181,7 @@ describe("YouTubeService", () => {
 
         const playlist_item_ids_to_reduce = ["pl_itm_id_0", "pl_itm_id_1"];
         const playlist_item_ids_not_to_touch = ["pl_itm_id_2", "pl_itm_id_3"];
+        const video_ids_not_to_touch = ["video_id_2", "video_id_3"];
         const video_ids_to_add = ["video_id_4", "video_id_5"];
 
         
@@ -254,14 +255,14 @@ describe("YouTubeService", () => {
             not_called_delete_playlist_item_url_and_queries.forEach((url_and_query) => expect(deleteMock).not.toHaveBeenCalledWith(url_and_query, get_options));
         });
 
-        test("Add songs from video id to playlist.", async () => {
+        test("Add difference of songs from video id to playlist.", async () => {
             const add_url_and_query = `${playlist_url}?part=snippet`
-            const bodies = songs.map((song) => (JSON.stringify({
+            const bodies = video_ids_to_add.map((id) => (JSON.stringify({
                 snippet: {
                     playlistId: mocked_playlist_id,
                     resourceId: {
                         kind: "youtube#video",
-                        videoId: song.youtube_video_id,
+                        videoId: id,
                     }
                 }
             })));
@@ -271,6 +272,26 @@ describe("YouTubeService", () => {
 
             bodies.forEach((body) => {
                 expect(postMock).toHaveBeenCalledWith(add_url_and_query, { ...json_options, payload: body });
+            });
+        });
+
+        test("Do not add the same songs in new and old playlist.", async () => {
+            const add_url_and_query = `${playlist_url}?part=snippet`
+            const not_called_bodies = video_ids_not_to_touch.map((id) => (JSON.stringify({
+                snippet: {
+                    playlistId: mocked_playlist_id,
+                    resourceId: {
+                        kind: "youtube#video",
+                        videoId: id,
+                    }
+                }
+            })));
+
+            await service.init();
+            await service.refreshPlaylistWith(songs);
+
+            not_called_bodies.forEach((body) => {
+                expect(postMock).not.toHaveBeenCalledWith(add_url_and_query, { ...json_options, payload: body });
             });
         });
 
