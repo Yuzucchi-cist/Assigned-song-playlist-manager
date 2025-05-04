@@ -169,17 +169,19 @@ describe("YouTubeService", () => {
     });
 
     describe("refreshPlaylistWith", () => {
-        // old playlist: video_id_0 to video_id_3
-        // new playlist: video_id_2 to video_id_5
-        // playlist to reduce: video_id_0, video_id_1
-        // playlist not to touch: video_id_2, video_id_3
-        // playlist to add: video_id_4, video_id_5
+        // old playlist id: 0 to 3
+        // new playlist id: 2 to 5
+        // playlist id to reduce:      0, 1
+        // playlist id not to touch:   2, 3
+        // playlist id to add:         4, 5
         const songs: Song[] = [...Array(4)].map((_, num) => ({name: `name_${num+2}`, name_and_artist: `n_and_a_${num+2}`, youtube_video_id: `video_id_${num+2}`}));
-        const old_playlist_ids = [...Array(4)].map((_, num) => `playlist_${num}`);
-        const old_video_ids = [...Array(4)].map((_, num) => `video_id_${num}`);
-        const video_ids_to_reduce = [...Array(2)].map((_, num) => `video_id_${num}`);
-        const video_not_to_touch = [...Array(2)].map((_, num) => `video_id_${num+2}`);
-        const video_ids_to_add = [...Array(2)].map((_, num) => `video_id_${num+4}`);
+        const old_id_indexs = [...Array(4)].map((_, num) => num);
+        const old_playlist_item_ids = old_id_indexs.map((_, num) => `pl_itm_id_${num}`);
+        const old_video_ids = old_id_indexs.map((_, num) => `video_id_${num}`);
+
+        const playlist_item_ids_to_reduce = ["pl_itm_id_0", "pl_itm_id_1"];
+        const playlist_item_ids_not_to_touch = ["pl_itm_id_2", "pl_itm_id_3"];
+        const video_ids_to_add = ["video_id_4", "video_id_5"];
 
         
         const playlist_url = `${mocked_endpoint}/playlistItems`;
@@ -187,7 +189,7 @@ describe("YouTubeService", () => {
         const playlist_resource_items = [...Array(4)].map(
             (_, i) => ({
                 ...generateMock(YouTubePlaylistItemResourceSchema),
-                id: old_playlist_ids[i],
+                id: old_playlist_item_ids[i],
                 snippet: {resourceId: {kind: "test_kind", videoId: old_video_ids[i]}}
             })
         );
@@ -234,13 +236,22 @@ describe("YouTubeService", () => {
             expect(getMock).toHaveBeenNthCalledWith(1, get_playlist_url_and_query, get_options);
         });
 
-        test("Remove all songs of playlist.", async () => {
-            const delete_playlist_item_url_and_queries = old_playlist_ids.map((id) => `${playlist_url}?id=${id}`);
+        test("Remove different songs of playlist.", async () => {
+            const delete_playlist_item_url_and_queries = playlist_item_ids_to_reduce.map((id) => `${playlist_url}?id=${id}`);
 
             await service.init();
             await service.refreshPlaylistWith(songs);
 
             delete_playlist_item_url_and_queries.forEach((url_and_query) => expect(deleteMock).toHaveBeenCalledWith(url_and_query, get_options));
+        });
+
+        test("Do not remove the same songs in new and old playlist.", async () => {
+            const not_called_delete_playlist_item_url_and_queries = playlist_item_ids_not_to_touch.map((id) => `${playlist_url}?id=${id}`);
+            
+            await service.init();
+            await service.refreshPlaylistWith(songs);
+
+            not_called_delete_playlist_item_url_and_queries.forEach((url_and_query) => expect(deleteMock).not.toHaveBeenCalledWith(url_and_query, get_options));
         });
 
         test("Add songs from video id to playlist.", async () => {
@@ -265,7 +276,7 @@ describe("YouTubeService", () => {
 
         test("All fetch of refreshing playlist", async () => {
             const get_playlist_url_and_query = `${playlist_url}?part=id&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
-            const delete_playlist_item_url_and_queries = old_playlist_ids.map((id) => `${playlist_url}?id=${id}`);
+            const delete_playlist_item_url_and_queries = old_playlist_item_ids.map((id) => `${playlist_url}?id=${id}`);
             const add_url_and_query = `${playlist_url}?part=snippet`
             const bodies = songs.map((song) => (JSON.stringify({
                 snippet: {
@@ -293,7 +304,7 @@ describe("YouTubeService", () => {
             mocked_refreshed_access_token_response.access_token = refreshed_access_token;
 
             const get_playlist_url_and_query = `${playlist_url}?part=id&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
-            const delete_playlist_item_url_and_queries = old_playlist_ids.map((id) => `${playlist_url}?id=${id}`);
+            const delete_playlist_item_url_and_queries = old_playlist_item_ids.map((id) => `${playlist_url}?id=${id}`);
             const add_url_and_query = `${playlist_url}?part=snippet`
             const bodies = songs.map((song) => (JSON.stringify({
                 snippet: {

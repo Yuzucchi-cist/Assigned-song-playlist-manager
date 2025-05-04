@@ -16,18 +16,26 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
     }
 
     async refreshPlaylistWith(songs: Song[]): Promise<UnfoundSongs> {
-        // Remove all songs in playlist.
+        const video_ids = songs.map((song) => song.youtube_video_id);
+
+        // Remove different songs in playlist.
         console.log("Start to get playlist.");
         const current_playlist_ids = await this.getPlaylistItems();
 
         console.log("Srart to delete playlist.");
-        await this.deletePlaylistItems(current_playlist_ids);
+
+        const delete_ids = current_playlist_ids
+            .filter((old) => !video_ids.includes(old.video_id))
+            .map((to_delete) => to_delete.id);
+        await this.deletePlaylistItems(delete_ids);
 
         console.log("Srart to add items to playlist.");
         return await this.addItemsToPlaylist(songs);
     }
 
-    private async getPlaylistItems(): Promise<string[]> {
+    private async getPlaylistItems(): Promise<
+        { id: string; video_id: string }[]
+    > {
         const options = {
             headers: {
                 Authorization: `Bearer ${this.access_token}`,
@@ -44,7 +52,10 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
         );
         const parsed_response =
             YouTubePlaylistItemsResponseSchema.parse(response);
-        return parsed_response.items.map((item) => item.id);
+        return parsed_response.items.map((item) => ({
+            id: item.id,
+            video_id: item.snippet.resourceId.videoId,
+        }));
     }
 
     private async deletePlaylistItems(
