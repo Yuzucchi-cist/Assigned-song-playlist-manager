@@ -59,7 +59,7 @@
     ],
     "moduleNameMapper": {
       "@/env": [
-        "<rootDir>/src/util/env.local"
+        "<rootDir>/src/util/env/env.local"
       ],
       "@/http": [
         "<rootDir>/src/lib/http/WrappedHttpClient.local"

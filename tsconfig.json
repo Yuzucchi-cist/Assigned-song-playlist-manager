@@ -7,7 +7,7 @@
     "compilerOptions": {
         "baseUrl": "./src",
         "paths": {
-            "@/env": ["util/env.remote"],
+            "@/env": ["util/env/env.remote"],
             "@/http": ["lib/http/WrappedHttpClient.remote"],
             "#/*": ["*"]
         }
