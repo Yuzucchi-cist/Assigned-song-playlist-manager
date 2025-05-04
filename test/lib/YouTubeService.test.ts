@@ -1,6 +1,6 @@
 import { HttpClient } from '#/interface/HttpClient';
 import { WrappedHttpClient } from '#/util/http/WrappedHttpClient.local';
-import { YouTubeService } from '#/lib/YouTubeService';
+import { YouTubeService } from '#/lib/googleapis/YouTubeService';
 import { GoogleAuthTokenResponseSchema, YouTubePlaylistItemsResponseSchema } from '#/validator/googleapis.z';
 import { Song } from '#/type/song';
 import { getEnvVar } from '@/env';
