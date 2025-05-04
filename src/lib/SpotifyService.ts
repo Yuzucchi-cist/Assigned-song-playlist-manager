@@ -1,4 +1,4 @@
-import { OAuth2ApiClient } from "./http/OAuth2ApiClient";
+import { OAuth2ApiClient } from "#/util/http/OAuth2ApiClient";
 import { PlaylistManager } from "../interface/PlaylistManager";
 import { getEnvVar, saveEnvVariable, saveEnvVariables } from "@/env";
 import {

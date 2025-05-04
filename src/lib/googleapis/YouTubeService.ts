@@ -1,8 +1,8 @@
-import { OAuth2ApiClient } from "./http/OAuth2ApiClient";
+import { OAuth2ApiClient } from "#/util/http/OAuth2ApiClient";
 import { PlaylistManager } from "#/interface/PlaylistManager";
 import { Song, UnfoundSongs } from "#/type/song";
 import { YouTubePlaylistItemsResponseSchema } from "#/validator/googleapis.z";
-import { GoogleApiBase } from "./googleapis/GoogleApisBase";
+import { GoogleApiBase } from "./GoogleApisBase";
 
 export class YouTubeService extends GoogleApiBase implements PlaylistManager {
     private readonly endpoint = "https://www.googleapis.com/youtube/v3";
