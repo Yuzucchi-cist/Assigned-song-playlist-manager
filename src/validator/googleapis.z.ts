@@ -25,6 +25,12 @@ export const YouTubePlaylistItemResourceSchema = z
         kind: z.string(),
         etag: z.string(),
         id: z.string(),
+        snippet: z.object({
+            resourceId: z.object({
+                kind: z.string(),
+                videoId: z.string(),
+            }),
+        }).passthrough(),
     }).passthrough();
 
 // Returned response: GET https://www.googleapis.com/youtube/v3/playlistItems

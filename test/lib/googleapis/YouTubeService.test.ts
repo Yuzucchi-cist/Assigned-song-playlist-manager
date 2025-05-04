@@ -209,7 +209,7 @@ describe("YouTubeService", () => {
             service = generateYouTubeService(http_mock);
         });
         test("Get playlist songs.", async () => {
-            const get_playlist_url_and_query = `${playlist_url}?part=id&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
+            const get_playlist_url_and_query = `${playlist_url}?part=id,snippet&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
 
             await service.init();
             await service.refreshPlaylistWith(songs);

@@ -36,7 +36,7 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
             muteHttpExceptions: true,
         };
 
-        const query = `part=id&playlistId=${this.playlist_id}&mine=true&maxResults=50`;
+        const query = `part=id,snippet&playlistId=${this.playlist_id}&mine=true&maxResults=50`;
         const response = await this.oauth_http.get(
             `${this.playlist_url}?${query}`,
             options,
