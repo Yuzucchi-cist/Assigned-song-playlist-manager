@@ -1,4 +1,4 @@
-import { OAuth2ApiClient } from "./http/OAuth2ApiClient";
+import { OAuth2ApiClient } from "#/util/http/OAuth2ApiClient";
 import { PlaylistManager } from "#/interface/PlaylistManager";
 import { Song, UnfoundSongs } from "#/type/song";
 import { YouTubePlaylistItemsResponseSchema } from "#/validator/googleapis.z";

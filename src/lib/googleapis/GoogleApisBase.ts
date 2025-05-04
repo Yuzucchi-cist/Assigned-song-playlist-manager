@@ -1,5 +1,5 @@
 import { getEnvVar, saveEnvVariable, saveEnvVariables } from "@/env";
-import { OAuth2ApiClient } from "../http/OAuth2ApiClient";
+import { OAuth2ApiClient } from "#/util/http/OAuth2ApiClient";
 import { GoogleAuthTokenResponseSchema } from "#/validator/googleapis.z";
 
 // TODO: Add tests.

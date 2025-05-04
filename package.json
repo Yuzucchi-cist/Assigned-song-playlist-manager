@@ -62,7 +62,7 @@
         "<rootDir>/src/util/env/env.local"
       ],
       "@/http": [
-        "<rootDir>/src/lib/http/WrappedHttpClient.local"
+        "<rootDir>/src/util/http/WrappedHttpClient.local"
       ],
       "^#/(.+)$": "<rootDir>/src/$1"
     },

@@ -1,4 +1,4 @@
-import { OAuth2ApiClient } from "../http/OAuth2ApiClient";
+import { OAuth2ApiClient } from "#/util/http/OAuth2ApiClient"
 import { GoogleApiBase } from "./GoogleApisBase";
 import { Song } from "#/type/song";
 import { SheetResponseSchema } from "#/validator/googleapis.z";

@@ -7,8 +7,8 @@ import { SpotifyAuthTokenResponseSchema, SpotifyPlaylistTracksSchema, SpotifyTra
 import { getEnvVar } from '#/util/env/env.local';
 import * as fs from 'fs';
 import path from 'path';
-import { WrappedHttpClient } from '#/lib/http/WrappedHttpClient.local';
-import { OAuth2ApiClient } from '#/lib/http/OAuth2ApiClient';
+import { WrappedHttpClient } from '#/util/http/WrappedHttpClient.local';
+import { OAuth2ApiClient } from '#/util/http/OAuth2ApiClient';
 
 let envFilePath: string
 let envFileContent: string

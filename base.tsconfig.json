@@ -12,7 +12,7 @@
     "baseUrl": "./src",                                  /* Specify the base directory to resolve non-relative module names. */
     "paths": {
       "@/env": ["util/env/env.local"],
-      "@/http": ["lib/http/WrappedHttpClient.local"],
+      "@/http": ["util/http/WrappedHttpClient.local"],
       "#/*": ["*"]
     },                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
     "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */

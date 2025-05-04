@@ -1,5 +1,5 @@
 import { HttpClient } from '#/interface/HttpClient';
-import { WrappedHttpClient } from '#/lib/http/WrappedHttpClient.local';
+import { WrappedHttpClient } from '#/util/http/WrappedHttpClient.local';
 import { YouTubeService } from '#/lib/YouTubeService';
 import { GoogleAuthTokenResponseSchema, YouTubePlaylistItemsResponseSchema } from '#/validator/googleapis.z';
 import { Song } from '#/type/song';
@@ -8,7 +8,7 @@ import { generateMock } from '@anatine/zod-mock';
 import * as fs from 'fs';
 import path from 'path';
 import { InvalidAccessTokenError } from '#/error/http_client';
-import { OAuth2ApiClient } from '#/lib/http/OAuth2ApiClient';
+import { OAuth2ApiClient } from '#/util/http/OAuth2ApiClient';
 
 let envFilePath: string
 let envFileContent: string
