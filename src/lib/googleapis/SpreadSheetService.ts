@@ -65,11 +65,11 @@ export class SpreadSheetService extends GoogleApiBase {
 
     private extractYouTubeVideoId(url: string): string | null {
         const watch_url_pattern =
-            /^https:\/\/www\.youtube\.com\/watch\?v=([^&]+)/;
-        const short_url_pattern = /^https:\/\/www\.youtu.be\/([^?]+)/;
+            /^https:\/\/(m|www)\.youtube\.com\/watch\?v=([^&]+)/;
+        const short_url_pattern = /^https:\/\/youtu.be\/([^?]+)/;
 
         const watch_url_matched = watch_url_pattern.exec(url);
-        if (watch_url_matched) return watch_url_matched[1];
+        if (watch_url_matched) return watch_url_matched[2];
 
         const short_url_matched = short_url_pattern.exec(url);
         if (short_url_matched) return short_url_matched[1];

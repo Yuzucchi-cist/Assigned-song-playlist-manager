@@ -31,42 +31,20 @@ describe("SpreadSheetService", () => {
         fs.writeFileSync(envFilePath, envFileContent);
     });
 
-    const sheet_response_base: {spreadsheetId: string, sheets: Array<{data: Array<{rowData: Array<{values: Array<{formattedValue: string, hyperlink: string}>}>}>}>} = {
+    const assigned_songs: Song[] = [...Array(5)].map((_, i) => ({name: "", name_and_artist: `Song${i}/Artict${i}`, youtube_video_id: `video_id_${i}`}));
+
+    const sheet_response: {spreadsheetId: string, sheets: Array<{data: Array<{rowData: Array<{values: Array<{formattedValue: string, hyperlink: string}>}>}>}>} = {
         spreadsheetId: "test_id",
         sheets: [{
         data: [{
-            rowData: [
-                {values: [{formattedValue: "Song0/Artist0", hyperlink: "https://www.youtube.com/watch?v=video_id_0"}]},
-                {values: [{formattedValue: "Song1/Artist1", hyperlink: "https://www.youtube.com/watch?v=video_id_1"}]},
-                {values: [{formattedValue: "Song2/Artist2", hyperlink: "https://youtu.be/testVideoId?si=s3YiFGS9nunWdRlW"}]},
-                {values: [{formattedValue: "Song3/Artist3", hyperlink: "https://www.youtube.com/watch?v=video_id_3"}]},
-            ],
+            rowData: assigned_songs.map((song) => ({
+                values: [{formattedValue: song.name_and_artist, hyperlink: `https://www.youtube.com/watch?v=${song.youtube_video_id}`}]
+            })),
         }]
     }]};
 
     const mocked_access_token_response = generateMock(GoogleAuthTokenResponseSchema);
 
-    const sheet_response = { ...sheet_response_base };
-    sheet_response.sheets[0].data[0].rowData.map((row, index) => {
-        row.values![0].hyperlink = `https://www.youtube.com/watch?v=video_id_${index}`;
-        return row;
-    });
-    const assigned_songs: Song[] = sheet_response.sheets[0].data[0].rowData.map(
-        (row) => {
-            if (!row.values![0].hyperlink) {
-                return {name: "", name_and_artist: row.values![0].formattedValue!, youtube_video_id: ""};
-            } else {
-                const matched_youtube_video_id = /https:\/\/www\.youtube\.com\/watch\?v=(.+)/.exec(row.values![0].hyperlink);
-                const matched_short_youtube_video_id = /https:\/\/youtu.be\/([^?]+)/.exec(row.values![0].hyperlink);
-                const youtube_video_id = matched_youtube_video_id
-                                            ? matched_youtube_video_id[1]
-                                            : matched_short_youtube_video_id
-                                                ? matched_short_youtube_video_id[1]
-                                                : "";
-                return {name: "", name_and_artist: row.values![0].formattedValue!, youtube_video_id: youtube_video_id};
-            }
-        }
-    );
     const mocked_access_token = mocked_access_token_response.access_token;
 
     let service: SpreadSheetService;
@@ -93,6 +71,54 @@ describe("SpreadSheetService", () => {
             const result = await service.getAssignedSongs();
 
             expect(getMock).toHaveBeenCalledWith(get_sheet_url_and_query, get_options);
+            expect(result).toStrictEqual(assigned_songs);
+        });
+
+        test("return YouTube video id in song no matter YouTube URL.", async () => {
+            const verious_link_response = {
+                spreadsheetId: "test_id",
+                sheets: [{
+                    data: [{
+                        rowData: [
+                            {
+                                values: [{
+                                    formattedValue: assigned_songs[0].name_and_artist,
+                                    // https://www.youtube.com/watch?v=${video_id} 
+                                    hyperlink: `https://www.youtube.com/watch?v=${assigned_songs[0].youtube_video_id}`}]
+                            },
+                            {
+                                values: [{
+                                    formattedValue: assigned_songs[1].name_and_artist,
+                                    // https://www.youtube.com/watch?v=${video_id}&t=59s
+                                    hyperlink: `https://www.youtube.com/watch?v=${assigned_songs[1].youtube_video_id}&t=59s`}]
+                            },
+                            {
+                                values: [{
+                                    formattedValue: assigned_songs[2].name_and_artist,
+                                    // https://m.youtube.com/watch?v=${video_id}&t=59s
+                                    hyperlink: `https://m.youtube.com/watch?v=${assigned_songs[2].youtube_video_id}&t=59s`}]
+                            },
+                            {
+                                values: [{
+                                    formattedValue: assigned_songs[3].name_and_artist,
+                                    // https://youtu.be/${video_id}
+                                    hyperlink: `https://youtu.be/${assigned_songs[3].youtube_video_id}`}]
+                            },
+                            {
+                                values: [{
+                                    formattedValue: assigned_songs[4].name_and_artist,
+                                    // https://youtu.be/${video_id}?t=59s 
+                                    hyperlink: `https://youtu.be/${assigned_songs[4].youtube_video_id}?=59s`}]
+                            },
+                        ],
+                    }],
+                }],
+            };
+            getMock.mockResolvedValue(verious_link_response);
+
+            await service.init();
+            const result = await service.getAssignedSongs();
+
             expect(result).toStrictEqual(assigned_songs);
         });
     });
