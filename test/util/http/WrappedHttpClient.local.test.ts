@@ -1,4 +1,4 @@
-import { WrappedHttpClient } from '#/lib/http/WrappedHttpClient.local'
+import { WrappedHttpClient } from '#/util/http/WrappedHttpClient.local'
 import { InvalidAccessTokenError } from '#/error/http_client';
 
 describe("AxiosHttpClient", () => {

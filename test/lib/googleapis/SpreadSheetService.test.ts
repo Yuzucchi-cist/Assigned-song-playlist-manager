@@ -1,8 +1,8 @@
 import { HttpClient } from '#/interface/HttpClient';
 import { SpreadSheetService } from '#/lib/googleapis/SpreadSheetService';
-import { OAuth2ApiClient } from '#/lib/http/OAuth2ApiClient';
+import { OAuth2ApiClient } from '#/util/http/OAuth2ApiClient';
 import { GoogleAuthTokenResponseSchema } from '#/validator/googleapis.z';
-import { WrappedHttpClient } from '#/lib/http/WrappedHttpClient.local';
+import { WrappedHttpClient } from '#/util/http/WrappedHttpClient.local';
 import { generateMock } from '@anatine/zod-mock';
 import * as fs from 'fs';
 import path from 'path';

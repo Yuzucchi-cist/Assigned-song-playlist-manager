@@ -1,8 +1,8 @@
-import { OAuth2ApiClient } from "./http/OAuth2ApiClient";
+import { OAuth2ApiClient } from "#/util/http/OAuth2ApiClient";
 import { PlaylistManager } from "#/interface/PlaylistManager";
 import { Song, UnfoundSongs } from "#/type/song";
 import { YouTubePlaylistItemsResponseSchema } from "#/validator/googleapis.z";
-import { GoogleApiBase } from "./googleapis/GoogleApisBase";
+import { GoogleApiBase } from "./GoogleApisBase";
 
 export class YouTubeService extends GoogleApiBase implements PlaylistManager {
     private readonly endpoint = "https://www.googleapis.com/youtube/v3";
@@ -16,18 +16,46 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
     }
 
     async refreshPlaylistWith(songs: Song[]): Promise<UnfoundSongs> {
-        // Remove all songs in playlist.
+        const unfoundSongs: UnfoundSongs = [];
+        const video_ids = songs
+            .map((song) => {
+                if (song.youtube_video_id) return song.youtube_video_id;
+                else {
+                    unfoundSongs.push(song);
+                    return null;
+                }
+            })
+            .filter((id) => id != null);
+
+        // Remove different songs in playlist.
         console.log("Start to get playlist.");
         const current_playlist_ids = await this.getPlaylistItems();
 
         console.log("Srart to delete playlist.");
-        await this.deletePlaylistItems(current_playlist_ids);
 
+        const delete_ids = current_playlist_ids
+            .filter((old) => !video_ids.includes(old.video_id))
+            .map((to_delete) => to_delete.id);
+        await this.deletePlaylistItems(delete_ids);
+
+        // Add defferent songs in playlist.
         console.log("Srart to add items to playlist.");
-        return await this.addItemsToPlaylist(songs);
+
+        const add_ids = video_ids.filter(
+            (id) =>
+                !current_playlist_ids
+                    .map((id_set) => id_set.video_id)
+                    .includes(id),
+        );
+
+        await this.addItemsToPlaylist(add_ids);
+
+        return unfoundSongs;
     }
 
-    private async getPlaylistItems(): Promise<string[]> {
+    private async getPlaylistItems(): Promise<
+        { id: string; video_id: string }[]
+    > {
         const options = {
             headers: {
                 Authorization: `Bearer ${this.access_token}`,
@@ -36,7 +64,7 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
             muteHttpExceptions: true,
         };
 
-        const query = `part=id&playlistId=${this.playlist_id}&mine=true&maxResults=50`;
+        const query = `part=id,snippet&playlistId=${this.playlist_id}&mine=true&maxResults=50`;
         const response = await this.oauth_http.get(
             `${this.playlist_url}?${query}`,
             options,
@@ -44,7 +72,10 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
         );
         const parsed_response =
             YouTubePlaylistItemsResponseSchema.parse(response);
-        return parsed_response.items.map((item) => item.id);
+        return parsed_response.items.map((item) => ({
+            id: item.id,
+            video_id: item.snippet.resourceId.videoId,
+        }));
     }
 
     private async deletePlaylistItems(
@@ -67,7 +98,7 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
         });
     }
 
-    private async addItemsToPlaylist(songs: Song[]): Promise<UnfoundSongs> {
+    private async addItemsToPlaylist(ids: string[]): Promise<void> {
         const options = {
             headers: {
                 Authorization: `Bearer ${this.access_token}`,
@@ -76,19 +107,13 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
             muteHttpExceptions: true,
         };
 
-        const unfoundSongs: UnfoundSongs = [];
-
-        songs.forEach(async (song) => {
-            if (!song.youtube_video_id) {
-                unfoundSongs.push(song);
-                return;
-            }
+        ids.forEach(async (id) => {
             const body = {
                 snippet: {
                     playlistId: this.playlist_id,
                     resourceId: {
                         kind: "youtube#video",
-                        videoId: song.youtube_video_id,
+                        videoId: id,
                     },
                 },
             };
@@ -104,7 +129,5 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
                 this.refreshAccessToken.bind(this),
             );
         });
-
-        return unfoundSongs;
     }
 }

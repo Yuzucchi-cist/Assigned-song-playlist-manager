@@ -1,6 +1,6 @@
 import { InvalidAccessTokenError } from '#/error/http_client';
 import { HttpClient } from '#/interface/HttpClient';
-import { OAuth2ApiClient } from '#/lib/http/OAuth2ApiClient';
+import { OAuth2ApiClient } from '#/util/http/OAuth2ApiClient';
 
 describe("OAuth2ApiClient", () => {
     const test_url = "test_url";
