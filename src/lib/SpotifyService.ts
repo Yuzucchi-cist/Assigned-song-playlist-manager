@@ -77,6 +77,7 @@ export class SpotifyService implements PlaylistManager {
             await this.searchSongs(songs);
         console.log("add start");
         await this.addSongsToPlaylist(song_ids);
+        console.log(`Added: ${song_ids.length}\n[\n\t${song_ids.join(',\n\t')}\n]`);
 
         return unfound_songs;
     }
