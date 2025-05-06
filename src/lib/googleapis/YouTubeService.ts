@@ -36,6 +36,8 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
             .filter((old) => !video_ids.includes(old.video_id))
             .map((to_delete) => to_delete.id);
         await this.deletePlaylistItems(delete_ids);
+        console.log(`Deleted: ${delete_ids.length}\n[\n\t${delete_ids.join(',\n\t')}\n]`);
+        console.log(delete_ids);
 
         // Add defferent songs in playlist.
         console.log("Srart to add items to playlist.");
@@ -47,7 +49,7 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
         );
 
         await this.addItemsToPlaylist(add_items);
-
+        console.log(`inserted: ${add_items.length}\n[[\n\t${add_items.map((item) => item.id).join(',\n\t')}\n]`);
         return unfoundSongs;
     }
 

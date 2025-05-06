@@ -23,10 +23,11 @@ export const App = async () => {
 
     console.log("Start get assigned songs.");
     const songs = await spservice.getAssignedSongs();
-    console.log(`Got:\n${songs}`);
+    console.log(`Got: ${songs.length}\n]\n\t${songs.map(((song) => `${song.name_and_artist}`)).join(',\n\t')}\n]`);
 
-    await sservice.refreshPlaylistWith(songs);
+    const unfound_songs = await sservice.refreshPlaylistWith(songs);
     console.log("SpotifyPlaylist refreshed.");
+    console.log(`Unfound: ${unfound_songs.length}\n[\n\t${unfound_songs.map((song) => song.name_and_artist).join(',\n\t')}\n]`);
 
     await yservice.refreshPlaylistWith(songs);
     console.log("YouTubePlaylist refreshed.");
