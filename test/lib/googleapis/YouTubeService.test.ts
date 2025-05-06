@@ -269,7 +269,8 @@ describe("YouTubeService", () => {
                     resourceId: {
                         kind: "youtube#video",
                         videoId: id.video_id,
-                    }
+                    },
+                    position: id.position,
                 }
             })));
 
@@ -283,22 +284,38 @@ describe("YouTubeService", () => {
 
         test("Do not add the same songs in new and old playlist.", async () => {
             const add_url_and_query = `${playlist_url}?part=snippet`
-            const not_called_bodies = no_touch_ids.map((id) => (JSON.stringify({
-                snippet: {
-                    playlistId: mocked_playlist_id,
-                    resourceId: {
-                        kind: "youtube#video",
-                        videoId: id.video_id,
-                    }
-                }
-            })));
+            const not_called_bodies = no_touch_ids.map(
+                (id) => expect.objectContaining({
+                    snippet: expect.objectContaining({
+                        playlistId: mocked_playlist_id,
+                        resourceId: expect.objectContaining({
+                            kind: "youtube#video",
+                            videoId: id.video_id,
+                        }),
+                        position: expect.any(Number),
+                    }),
+                })
+            );
 
             await service.init();
             await service.refreshPlaylistWith(songs);
 
-            not_called_bodies.forEach((body) => {
-                expect(postMock).not.toHaveBeenCalledWith(add_url_and_query, expect.objectContaining(({ ...json_options, payload: body })));
-            });
+            const called_args = postMock.mock.calls.map(
+                (call) => typeof call[1].payload == "string"
+                                                  ? { url: call[0], body: JSON.parse(call[1].payload) }
+                                                  : { url: call[0], body: call[1].payload }
+            );
+
+            called_args.forEach((called_arg) =>
+                not_called_bodies.forEach((body) =>
+                    expect(called_arg).not.toEqual(
+                        expect.objectContaining({
+                            url: add_url_and_query,
+                            body: body
+                        })
+                    )
+                )
+            )
         });
 
         test("All fetch of refreshing playlist", async () => {
@@ -311,7 +328,8 @@ describe("YouTubeService", () => {
                     resourceId: {
                         kind: "youtube#video",
                         videoId: id.video_id,
-                    }
+                    },
+                    position: id.position,
                 }
             })));
 
@@ -339,7 +357,8 @@ describe("YouTubeService", () => {
                     resourceId: {
                         kind: "youtube#video",
                         videoId: id.video_id,
-                    }
+                    },
+                    position: id.position,
                 }
             })));
 
