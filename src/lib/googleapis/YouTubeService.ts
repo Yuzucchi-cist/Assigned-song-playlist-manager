@@ -32,7 +32,6 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
         const current_playlist_ids = await this.getPlaylistItems();
 
         console.log("Srart to delete playlist.");
-
         const delete_ids = current_playlist_ids
             .filter((old) => !video_ids.includes(old.video_id))
             .map((to_delete) => to_delete.id);
@@ -40,15 +39,14 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
 
         // Add defferent songs in playlist.
         console.log("Srart to add items to playlist.");
-
-        const add_ids = video_ids.filter(
-            (id) =>
+        const add_items = video_ids.map((id, i) => ({id, position: i})).filter(
+            (item) =>
                 !current_playlist_ids
                     .map((id_set) => id_set.video_id)
-                    .includes(id),
+                    .includes(item.id),
         );
 
-        await this.addItemsToPlaylist(add_ids);
+        await this.addItemsToPlaylist(add_items);
 
         return unfoundSongs;
     }
@@ -98,7 +96,7 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
         });
     }
 
-    private async addItemsToPlaylist(ids: string[]): Promise<void> {
+    private async addItemsToPlaylist(items: {id: string; position: number;}[]): Promise<void> {
         const options = {
             headers: {
                 Authorization: `Bearer ${this.access_token}`,
@@ -107,14 +105,15 @@ export class YouTubeService extends GoogleApiBase implements PlaylistManager {
             muteHttpExceptions: true,
         };
 
-        ids.forEach(async (id) => {
+        items.forEach(async (item) => {
             const body = {
                 snippet: {
                     playlistId: this.playlist_id,
                     resourceId: {
                         kind: "youtube#video",
-                        videoId: id,
+                        videoId: item.id,
                     },
+                    position: item.position,
                 },
             };
 

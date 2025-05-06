@@ -169,29 +169,35 @@ describe("YouTubeService", () => {
     });
 
     describe("refreshPlaylistWith", () => {
-        // old playlist id: 0 to 3
-        // new playlist id: 2 to 5
-        // playlist id to reduce:      0, 1
-        // playlist id not to touch:   2, 3
-        // playlist id to add:         4, 5
-        const songs: Song[] = [...Array(4)].map((_, num) => ({name: `name_${num+2}`, name_and_artist: `n_and_a_${num+2}`, youtube_video_id: `video_id_${num+2}`}));
-        const old_id_indexs = [...Array(4)].map((_, num) => num);
-        const old_playlist_item_ids = old_id_indexs.map((_, num) => `pl_itm_id_${num}`);
-        const old_video_ids = old_id_indexs.map((_, num) => `video_id_${num}`);
+        type id_position = {
+            pl_itm_id: string;
+            video_id: string;
+            position: number | undefined;
+        };
 
-        const playlist_item_ids_to_reduce = ["pl_itm_id_0", "pl_itm_id_1"];
-        const playlist_item_ids_not_to_touch = ["pl_itm_id_2", "pl_itm_id_3"];
-        const video_ids_not_to_touch = ["video_id_2", "video_id_3"];
-        const video_ids_to_add = ["video_id_4", "video_id_5"];
+        // old playlist id: 0, 1,       4 ,5
+        // new playlist id:    1, 2, 3,    5,    7
+        // playlist id to reduce:      0, 4
+        // playlist id not to touch:   1, 5
+        // playlist id to add:         2, 3, 7
+        const old_id_indexs = [0, 1,       4 ,5];
+        const new_id_indexs = [   1, 2, 3,    5,    7];
+        const songs: Song[] =
+            new_id_indexs.map((num) => ({name: `name_${num}`, name_and_artist: `n_and_a_${num}`, youtube_video_id: `video_id_${num}`}));
+        const old_ids: id_position[] =
+            old_id_indexs.map((num, i) => ({pl_itm_id: `pl_itm_id_${num}`, video_id: `video_id_${num}`, position: i}));
 
+        const reduce_ids: id_position[] = [0, 4].map((num) => ({pl_itm_id: `pl_itm_id_${num}`, video_id: `video_id_${num}`, position: undefined}));
+        const no_touch_ids: id_position[] = [1, 5].map((num) => ({pl_itm_id: `pl_itm_id_${num}`, video_id: `video_id_${num}`, position: undefined}));
+        const add_ids: id_position[] = [{i: 2, p: 1}, {i: 3, p: 2}, {i: 7, p: 4}].map(({i:num, p: pos}) => ({pl_itm_id: `pl_itm_id_${num}`, video_id: `video_id_${num}`, position: pos}));
         
         const playlist_url = `${mocked_endpoint}/playlistItems`;
 
-        const playlist_resource_items = [...Array(4)].map(
-            (_, i) => ({
+        const playlist_resource_items = old_ids.map(
+            (id) => ({
                 ...generateMock(YouTubePlaylistItemResourceSchema),
-                id: old_playlist_item_ids[i],
-                snippet: {resourceId: {kind: "test_kind", videoId: old_video_ids[i]}}
+                id: id.pl_itm_id,
+                snippet: {resourceId: {kind: "test_kind", videoId: id.video_id}},
             })
         );
 
@@ -238,7 +244,7 @@ describe("YouTubeService", () => {
         });
 
         test("Remove different songs of playlist.", async () => {
-            const delete_playlist_item_url_and_queries = playlist_item_ids_to_reduce.map((id) => `${playlist_url}?id=${id}`);
+            const delete_playlist_item_url_and_queries = reduce_ids.map((id) => `${playlist_url}?id=${id.pl_itm_id}`);
 
             await service.init();
             await service.refreshPlaylistWith(songs);
@@ -247,23 +253,24 @@ describe("YouTubeService", () => {
         });
 
         test("Do not remove the same songs in new and old playlist.", async () => {
-            const not_called_delete_playlist_item_url_and_queries = playlist_item_ids_not_to_touch.map((id) => `${playlist_url}?id=${id}`);
+            const not_called_delete_playlist_item_url_and_queries = no_touch_ids.map((id) => `${playlist_url}?id=${id.pl_itm_id}`);
             
             await service.init();
             await service.refreshPlaylistWith(songs);
 
-            not_called_delete_playlist_item_url_and_queries.forEach((url_and_query) => expect(deleteMock).not.toHaveBeenCalledWith(url_and_query, get_options));
+            not_called_delete_playlist_item_url_and_queries.forEach((url_and_query) => expect(deleteMock).not.toHaveBeenCalledWith(url_and_query, expect.objectContaining((get_options))));
         });
 
         test("Add difference of songs from video id to playlist.", async () => {
             const add_url_and_query = `${playlist_url}?part=snippet`
-            const bodies = video_ids_to_add.map((id) => (JSON.stringify({
+            const bodies = add_ids.map((id) => (JSON.stringify({
                 snippet: {
                     playlistId: mocked_playlist_id,
                     resourceId: {
                         kind: "youtube#video",
-                        videoId: id,
-                    }
+                        videoId: id.video_id,
+                    },
+                    position: id.position,
                 }
             })));
 
@@ -277,35 +284,52 @@ describe("YouTubeService", () => {
 
         test("Do not add the same songs in new and old playlist.", async () => {
             const add_url_and_query = `${playlist_url}?part=snippet`
-            const not_called_bodies = video_ids_not_to_touch.map((id) => (JSON.stringify({
-                snippet: {
-                    playlistId: mocked_playlist_id,
-                    resourceId: {
-                        kind: "youtube#video",
-                        videoId: id,
-                    }
-                }
-            })));
+            const not_called_bodies = no_touch_ids.map(
+                (id) => expect.objectContaining({
+                    snippet: expect.objectContaining({
+                        playlistId: mocked_playlist_id,
+                        resourceId: expect.objectContaining({
+                            kind: "youtube#video",
+                            videoId: id.video_id,
+                        }),
+                        position: expect.any(Number),
+                    }),
+                })
+            );
 
             await service.init();
             await service.refreshPlaylistWith(songs);
 
-            not_called_bodies.forEach((body) => {
-                expect(postMock).not.toHaveBeenCalledWith(add_url_and_query, { ...json_options, payload: body });
-            });
+            const called_args = postMock.mock.calls.map(
+                (call) => typeof call[1].payload == "string"
+                                                  ? { url: call[0], body: JSON.parse(call[1].payload) }
+                                                  : { url: call[0], body: call[1].payload }
+            );
+
+            called_args.forEach((called_arg) =>
+                not_called_bodies.forEach((body) =>
+                    expect(called_arg).not.toEqual(
+                        expect.objectContaining({
+                            url: add_url_and_query,
+                            body: body
+                        })
+                    )
+                )
+            )
         });
 
         test("All fetch of refreshing playlist", async () => {
             const get_playlist_url_and_query = `${playlist_url}?part=id,snippet&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
-            const delete_playlist_item_url_and_queries = playlist_item_ids_to_reduce.map((id) => `${playlist_url}?id=${id}`);
+            const delete_playlist_item_url_and_queries = reduce_ids.map((id) => `${playlist_url}?id=${id.pl_itm_id}`);
             const add_url_and_query = `${playlist_url}?part=snippet`
-            const bodies = video_ids_to_add.map((video_id) => (JSON.stringify({
+            const bodies = add_ids.map((id) => (JSON.stringify({
                 snippet: {
                     playlistId: mocked_playlist_id,
                     resourceId: {
                         kind: "youtube#video",
-                        videoId: video_id,
-                    }
+                        videoId: id.video_id,
+                    },
+                    position: id.position,
                 }
             })));
 
@@ -325,15 +349,16 @@ describe("YouTubeService", () => {
             mocked_refreshed_access_token_response.access_token = refreshed_access_token;
 
             const get_playlist_url_and_query = `${playlist_url}?part=id,snippet&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
-            const delete_playlist_item_url_and_queries = playlist_item_ids_to_reduce.map((id) => `${playlist_url}?id=${id}`);
+            const delete_playlist_item_url_and_queries = reduce_ids.map((id) => `${playlist_url}?id=${id.pl_itm_id}`);
             const add_url_and_query = `${playlist_url}?part=snippet`
-            const bodies = video_ids_to_add.map((video_id) => (JSON.stringify({
+            const bodies = add_ids.map((id) => (JSON.stringify({
                 snippet: {
                     playlistId: mocked_playlist_id,
                     resourceId: {
                         kind: "youtube#video",
-                        videoId: video_id,
-                    }
+                        videoId: id.video_id,
+                    },
+                    position: id.position,
                 }
             })));
 
