@@ -8,17 +8,7 @@ export class WrappedHttpClient implements HttpClient {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async get(url: string, options?: any): Promise<unknown> {
         const res = UrlFetchApp.fetch(url, options);
-        switch (res.getResponseCode()) {
-            case 200:
-                return JSON.parse(res.getContentText());
-            case 401:
-                throw new InvalidAccessTokenError();
-            default:
-                console.log(url);
-                console.log(options);
-                console.log(res.getContentText());
-                throw new Error("Unknown Fetch Error!");
-        }
+        return this.response2contents(url, options, res);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,18 +17,7 @@ export class WrappedHttpClient implements HttpClient {
             ...options,
             method: "post",
         });
-        switch (res.getResponseCode()) {
-            case 200:
-            case 201: // Response 201 for add item to playlist response
-                return JSON.parse(res.getContentText());
-            case 401:
-                throw new InvalidAccessTokenError();
-            default:
-                console.log(url);
-                console.log(options);
-                console.log(res.getContentText());
-                throw new Error("Unknown Fetch Error!");
-        }
+        return this.response2contents(url, options, res);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,17 +26,7 @@ export class WrappedHttpClient implements HttpClient {
             ...options,
             method: "put",
         });
-        switch (res.getResponseCode()) {
-            case 200:
-                return JSON.parse(res.getContentText());
-            case 401:
-                throw new InvalidAccessTokenError();
-            default:
-                console.log(url);
-                console.log(options);
-                console.log(res.getContentText());
-                throw new Error("Unknown Fetch Error!");
-        }
+        return this.response2contents(url, options, res);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,18 +35,7 @@ export class WrappedHttpClient implements HttpClient {
             ...options,
             method: "delete",
         });
-        switch (res.getResponseCode()) {
-            case 200:
-            case 204: // Response 204 for delete playlist item response.
-                return JSON.parse(res.getContentText());
-            case 401:
-                throw new InvalidAccessTokenError();
-            default:
-                console.log(url);
-                console.log(options);
-                console.log(res.getContentText());
-                throw new Error("Unknown Fetch Error!");
-        }
+        return this.response2contents(url, options, res);
     }
 
     btoa(data: string): string {
@@ -95,5 +53,20 @@ export class WrappedHttpClient implements HttpClient {
                 }
             })
             .join("&");
+    }
+
+    private response2contents(url: string, options: unknown, response: GoogleAppsScript.URL_Fetch.HTTPResponse) {
+        switch (response.getResponseCode()) {
+            case 200:
+            case 204: // Response 204 for delete playlist item response.
+                return JSON.parse(response.getContentText());
+            case 401:
+                throw new InvalidAccessTokenError();
+            default:
+                console.log(url);
+                console.log(options);
+                console.log(response.getContentText());
+                throw new Error("Unknown Fetch Error!");
+        }
     }
 }
