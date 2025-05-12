@@ -65,7 +65,7 @@ export class WrappedHttpClient implements HttpClient {
             default:
                 console.log(url);
                 console.log(options);
-                console.log(response.getResponseCode);
+                console.log(response.getResponseCode());
                 console.log(response.getContentText());
                 throw new Error("Unknown Fetch Error!");
         }
