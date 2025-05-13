@@ -58,6 +58,7 @@ export class WrappedHttpClient implements HttpClient {
     private response2contents(url: string, options: unknown, response: GoogleAppsScript.URL_Fetch.HTTPResponse) {
         switch (response.getResponseCode()) {
             case 200:
+            case 201: // Response 201 for Created.
             case 204: // Response 204 for delete playlist item response.
                 return JSON.parse(response.getContentText());
             case 401:
