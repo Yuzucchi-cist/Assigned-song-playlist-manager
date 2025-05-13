@@ -5,7 +5,7 @@ import { SheetResponseSchema } from "#/validator/googleapis.z";
 
 export class SpreadSheetService extends GoogleApiBase {
     private readonly endpoint = "https://sheets.googleapis.com/v4";
-    private readonly assigned_song_range = "C5:C";
+    private readonly assigned_song_range = "C4:C";
     private readonly spread_sheet_url = `${this.endpoint}/spreadsheets/${this.sheet_id}`;
 
     constructor(
