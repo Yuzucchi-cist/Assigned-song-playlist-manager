@@ -71,6 +71,10 @@ export class GoogleApiBase {
         );
         const parsed_response = GoogleAuthTokenResponseSchema.parse(response);
         this.access_token = parsed_response.access_token;
+        if (parsed_response.refresh_token) {
+            this.refresh_token = parsed_response.refresh_token;
+            saveEnvVariable("GOOGLE_REFRESH_TOKEN", this.refresh_token);
+        }
         saveEnvVariable("GOOGLE_ACCESS_TOKEN", this.access_token);
         return this.access_token;
     }
