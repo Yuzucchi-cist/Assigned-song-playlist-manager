@@ -7,6 +7,11 @@ import { generateMock } from '@anatine/zod-mock';
 import * as fs from 'fs';
 import path from 'path';
 import { Song } from '#/type/song';
+import * as googleToken from '@/googleToken';
+
+jest.mock('@/googleToken', () => ({
+    initGoogleTokens: jest.fn(),
+}));
 
 let envFilePath: string
 let envFileContent: string
@@ -61,6 +66,10 @@ describe("SpreadSheetService", () => {
             muteHttpExceptions: true,
         }
         beforeEach(() => {
+            (googleToken.initGoogleTokens as jest.Mock).mockResolvedValue({
+                access_token: mocked_access_token,
+                refresh_token: mocked_access_token_response.refresh_token,
+            });
             service = generateSpreadSheetService(assigned_song_range, generateHttpClientMock(getMock, postMock, jest.fn(), jest.fn()));
         });
 

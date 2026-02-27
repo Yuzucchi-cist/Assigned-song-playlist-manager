@@ -9,6 +9,11 @@ import * as fs from 'fs';
 import path from 'path';
 import { InvalidAccessTokenError } from '#/error/http_client';
 import { OAuth2ApiClient } from '#/util/http/OAuth2ApiClient';
+import * as googleToken from '@/googleToken';
+
+jest.mock('@/googleToken', () => ({
+    initGoogleTokens: jest.fn(),
+}));
 
 let envFilePath: string
 let envFileContent: string
@@ -39,11 +44,10 @@ describe("YouTubeService", () => {
 
     const mocked_client_id = getEnvVar("GOOGLE_CLIENT_ID");
     const mocked_client_secret = getEnvVar("GOOGLE_CLIENT_SECRET");
-    const mocked_authorization_code = getEnvVar("GOOGLE_AUTHORIZATION_CODE");
 
     describe("init", () => {
         const getMock = jest.fn().mockResolvedValue(undefined);
-        const postMock = jest.fn().mockResolvedValue(mocked_access_token_response);
+        const postMock = jest.fn().mockResolvedValue(undefined);
         const putMock = jest.fn().mockResolvedValue(undefined);
         const deleteMock = jest.fn().mockResolvedValue(undefined);
         const httpMock = generateHttpClientMock(getMock, postMock, putMock, deleteMock);
@@ -51,6 +55,10 @@ describe("YouTubeService", () => {
         let service: YouTubeService;
 
         beforeEach(() => {
+            (googleToken.initGoogleTokens as jest.Mock).mockResolvedValue({
+                access_token: mocked_access_token,
+                refresh_token: mocked_refresh_token,
+            });
             service = generateYouTubeService(httpMock);
         });
 
@@ -58,53 +66,25 @@ describe("YouTubeService", () => {
             getMock.mockClear();
             postMock.mockClear();
             putMock.mockClear();
+            (googleToken.initGoogleTokens as jest.Mock).mockClear();
         });
-
-        const access_token_options = {
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            muteHttpExceptions: true,
-            payload: {
-                client_id: mocked_client_id,
-                client_secret: mocked_client_secret,
-                code: mocked_authorization_code,
-                redirect_uri: "http://example.com/",
-                grant_type: "authorization_code",
-            }
-        };
 
         test("Set access token to env file and service property.", async () => {
             await service.init();
 
-            expect(postMock).toHaveBeenCalledWith(mocked_token_endpoint, access_token_options);
-
+            expect(googleToken.initGoogleTokens).toHaveBeenCalled();
             expect(getTestEnvFromFile("GOOGLE_ACCESS_TOKEN")).toBe(mocked_access_token);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             expect((service as any).access_token).toBe(mocked_access_token);
         });
 
-        test("Throws error and message prompt to get authorization when get error response.", async () => {
+        test("Throws error when initGoogleTokens fails.", async () => {
             const throwed_error = new Error("test error");
-            const postMock = jest.fn().mockRejectedValue(throwed_error);
-            const httpMock = generateHttpClientMock(
-                jest.fn().mockResolvedValue(undefined),
-                postMock,
-                jest.fn().mockResolvedValue(undefined),
-                jest.fn().mockResolvedValue(undefined) 
-            );
-            const service = generateYouTubeService(httpMock);
+            (googleToken.initGoogleTokens as jest.Mock).mockRejectedValue(throwed_error);
 
-            const error_message = 
-                    `Failed get access token: ${throwed_error} \n\n` +
-                    "Access get authorization code \n" +
-                    `https://accounts.google.com/o/oauth2/v2/auth?scope=https://www.googleapis.com/auth/spreadsheets.readonly%20https%3A//www.googleapis.com/auth/youtube.force-ssl&prompt=consent&include_granted_scopes=true&response_type=code&access_type=offline&redirect_uri=https%3A//example.com/&client_id=${mocked_client_id}`
-
-            const exec = () => service.init();
-            
-            await expect(exec).rejects.toStrictEqual(new Error(error_message));
+            await expect(() => service.init()).rejects.toStrictEqual(throwed_error);
         });
-        
+
         test("Set refresh token to env file and service property.", async () => {
             await service.init();
 
@@ -113,18 +93,11 @@ describe("YouTubeService", () => {
             expect((service as any).refresh_token).toBe(mocked_refresh_token);
         });
 
-        test("Don't set refresh token and set access token when response access token is null.", async () => {
-            const response_without_refresh_token = { ...mocked_access_token_response};
-            response_without_refresh_token.refresh_token = undefined;
-            const postMock = jest.fn().mockResolvedValue(response_without_refresh_token);
-            const httpMock = generateHttpClientMock(
-                jest.fn().mockResolvedValue(undefined),
-                postMock,
-                jest.fn().mockResolvedValue(undefined),
-                jest.fn().mockResolvedValue(undefined) 
-            );
-            const service = generateYouTubeService(httpMock);
-
+        test("Don't set refresh token and set access token when initGoogleTokens returns no refresh token.", async () => {
+            (googleToken.initGoogleTokens as jest.Mock).mockResolvedValue({
+                access_token: mocked_access_token,
+                refresh_token: undefined,
+            });
             await service.init();
 
             expect(getTestEnvFromFile("GOOGLE_ACCESS_TOKEN")).toBe(mocked_access_token);
@@ -136,27 +109,13 @@ describe("YouTubeService", () => {
             expect((service as any).refresh_token).toBeUndefined();
         });
 
-        test("Throw error when response is not match schema.", async () => {
-            const postMock = jest.fn().mockResolvedValue({invalid: "Schema"});
-            const httpMock = generateHttpClientMock(
-                jest.fn().mockResolvedValue(undefined),
-                postMock,
-                jest.fn().mockResolvedValue(undefined),
-                jest.fn().mockResolvedValue(undefined) 
-            );
-            const service = generateYouTubeService(httpMock);
-            jest.spyOn(console, 'log');
-            const exec = async () => await service.init();
-
-            await expect(exec).rejects.toBeInstanceOf(Error);
-            expect(console.log).toHaveBeenCalledWith("Failed validation: ");
-        });
-
-        test("If both of access token and refresh token exists, set env value.", async () => {
+        test("Stores tokens returned by initGoogleTokens on service.", async () => {
             const test_access_token = "test_access_token";
             const test_refresh_token = "test_refresh_token";
-            process.env.GOOGLE_ACCESS_TOKEN = test_access_token;
-            process.env.GOOGLE_REFRESH_TOKEN = test_refresh_token;
+            (googleToken.initGoogleTokens as jest.Mock).mockResolvedValue({
+                access_token: test_access_token,
+                refresh_token: test_refresh_token,
+            });
 
             await service.init();
 
@@ -164,7 +123,7 @@ describe("YouTubeService", () => {
             expect((service as any).access_token).toBe(test_access_token);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             expect((service as any).refresh_token).toBe(test_refresh_token);
-            expect(postMock).toHaveBeenCalledTimes(0);
+            expect(googleToken.initGoogleTokens).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -190,7 +149,7 @@ describe("YouTubeService", () => {
         const reduce_ids: id_position[] = [0, 4].map((num) => ({pl_itm_id: `pl_itm_id_${num}`, video_id: `video_id_${num}`, position: undefined}));
         const no_touch_ids: id_position[] = [1, 5].map((num) => ({pl_itm_id: `pl_itm_id_${num}`, video_id: `video_id_${num}`, position: undefined}));
         const add_ids: id_position[] = [{i: 2, p: 1}, {i: 3, p: 2}, {i: 7, p: 4}].map(({i:num, p: pos}) => ({pl_itm_id: `pl_itm_id_${num}`, video_id: `video_id_${num}`, position: pos}));
-        
+
         const playlist_url = `${mocked_endpoint}/playlistItems`;
 
         const playlist_resource_items = old_ids.map(
@@ -218,7 +177,7 @@ describe("YouTubeService", () => {
             },
             muteHttpExceptions: true,
         };
-        
+
         let getMock: jest.Mock;
         let postMock: jest.Mock;
         let putMock: jest.Mock;
@@ -227,6 +186,10 @@ describe("YouTubeService", () => {
         let service: YouTubeService;
 
         beforeEach(() => {
+            (googleToken.initGoogleTokens as jest.Mock).mockResolvedValue({
+                access_token: mocked_access_token,
+                refresh_token: mocked_refresh_token,
+            });
             getMock =
                 jest.fn().mockResolvedValue(mocked_playlist_item_response);
             postMock = jest.fn().mockResolvedValue(mocked_access_token_response)
@@ -235,6 +198,11 @@ describe("YouTubeService", () => {
             const http_mock = generateHttpClientMock(getMock, postMock, putMock, deleteMock);
             service = generateYouTubeService(http_mock);
         });
+
+        afterEach(() => {
+            (googleToken.initGoogleTokens as jest.Mock).mockClear();
+        });
+
         test("Get playlist songs.", async () => {
             const get_playlist_url_and_query = `${playlist_url}?part=id,snippet&playlistId=${mocked_playlist_id}&mine=true&maxResults=50`;
 
@@ -254,7 +222,7 @@ describe("YouTubeService", () => {
 
         test("Do not remove the same songs in new and old playlist.", async () => {
             const not_called_delete_playlist_item_url_and_queries = no_touch_ids.map((id) => `${playlist_url}?id=${id.pl_itm_id}`);
-            
+
             await service.init();
             await service.refreshPlaylistWith(songs);
 
@@ -342,7 +310,7 @@ describe("YouTubeService", () => {
                 expect(postMock).toHaveBeenCalledWith(add_url_and_query, { ...json_options, payload: body });
             });
         });
-        
+
         test("Refresh access token, save refreshed access token and reexec if access token has been expired.", async () => {
             const mocked_refreshed_access_token_response = { ...mocked_access_token_response };
             const refreshed_access_token = "refreshed_access_token";
@@ -365,9 +333,7 @@ describe("YouTubeService", () => {
             getMock =
                 jest.fn().mockRejectedValueOnce(new InvalidAccessTokenError())
                 .mockResolvedValue(mocked_playlist_item_response);
-            postMock = 
-                jest.fn().mockResolvedValueOnce(mocked_access_token_response)
-                .mockResolvedValue(mocked_refreshed_access_token_response);
+            postMock = jest.fn().mockResolvedValue(mocked_refreshed_access_token_response);
             putMock = jest.fn().mockResolvedValue(undefined);
             deleteMock = jest.fn().mockResolvedValue({snapshot_id: "abc"});
             const http_mock = generateHttpClientMock(getMock, postMock, putMock, deleteMock);
@@ -385,13 +351,13 @@ describe("YouTubeService", () => {
                 muteHttpExceptions: true,
             };
             expect(getMock).toHaveBeenNthCalledWith(2, get_playlist_url_and_query, refreshed_get_options);
-            
+
             const refresh_access_token_options = {
                 headers: { "Content-Type": "application/x-www-form-urlencoded"},
                 payload: `client_id=${mocked_client_id}&client_secret=${mocked_client_secret}&refresh_token=${mocked_refresh_token}&grant_type=refresh_token`,
                 muteHttpExceptions: true,
             };
-            expect(postMock).toHaveBeenNthCalledWith(2, mocked_token_endpoint, refresh_access_token_options);
+            expect(postMock).toHaveBeenNthCalledWith(1, mocked_token_endpoint, refresh_access_token_options);
             delete_playlist_item_url_and_queries.forEach((url_and_query) => expect(deleteMock).toHaveBeenCalledWith(url_and_query, refreshed_get_options));
             const refreshed_json_options = {
                 headers: {
