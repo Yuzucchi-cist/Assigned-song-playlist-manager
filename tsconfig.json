@@ -9,6 +9,7 @@
         "paths": {
             "@/env": ["util/env/env.remote"],
             "@/http": ["util/http/WrappedHttpClient.remote"],
+            "@/googleToken": ["util/auth/googleToken.remote"],
             "#/*": ["*"]
         }
     }
