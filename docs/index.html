@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assigned Song Playlist Manager</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f6f8fa;
+      color: #24292f;
+      line-height: 1.6;
+    }
+
+    header {
+      background: #24292f;
+      color: #fff;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+
+    header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    header p  { font-size: 0.95rem; color: #adbac7; }
+
+    nav {
+      background: #fff;
+      border-bottom: 1px solid #d0d7de;
+      text-align: center;
+      padding: 0.5rem 1rem;
+    }
+
+    nav a {
+      display: inline-block;
+      margin: 0 0.75rem;
+      color: #0969da;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    nav a:hover { text-decoration: underline; }
+
+    main {
+      max-width: 820px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    section {
+      background: #fff;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      padding: 1.5rem 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      border-bottom: 1px solid #d0d7de;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    h3 { font-size: 1rem; margin: 1.2rem 0 0.4rem; color: #57606a; }
+    h4 { font-size: 0.9rem; margin: 1rem 0 0.3rem; }
+
+    p  { margin-bottom: 0.75rem; font-size: 0.95rem; }
+    ul { padding-left: 1.4rem; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    li { margin-bottom: 0.25rem; }
+
+    .lang-block {
+      border-left: 3px solid #d0d7de;
+      padding-left: 1rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .lang-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: #57606a;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+
+    th, td {
+      border: 1px solid #d0d7de;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+
+    th { background: #f6f8fa; font-weight: 600; }
+
+    .updated {
+      font-size: 0.8rem;
+      color: #57606a;
+      margin-bottom: 1rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem 1rem;
+      font-size: 0.8rem;
+      color: #57606a;
+    }
+
+    footer a { color: #0969da; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      section { padding: 1rem; }
+      header h1 { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Assigned Song Playlist Manager</h1>
+  <p>Google Apps Script for automatic playlist synchronization</p>
+</header>
+
+<nav>
+  <a href="#overview">Overview</a>
+  <a href="privacy.html">Privacy Policy</a>
+  <a href="https://github.com/Yuzucchi-cist/Assigned-song-playlist-manager">GitHub</a>
+</nav>
+
+<main>
+
+  <!-- Overview -->
+  <section id="overview">
+    <h2>概要 / Overview</h2>
+
+    <div class="lang-block">
+      <div class="lang-label">日本語</div>
+      <p>Google スプレッドシートに記載された曲リスト（YouTube リンク付き）を読み取り、指定した YouTube プレイリストおよび Spotify プレイリストの内容をそのリストと一致するよう自動更新する Google Apps Script です。</p>
+    </div>
+
+    <div class="lang-block">
+      <div class="lang-label">English</div>
+      <p>A Google Apps Script that reads a song list (with YouTube links) from a Google Spreadsheet and automatically updates the specified YouTube and Spotify playlists to match that list.</p>
+    </div>
+
+    <h3>使用する API / APIs Used</h3>
+    <table>
+      <thead>
+        <tr><th>API</th><th>用途 / Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Google Sheets API</td><td>スプレッドシートから曲リストを読み取る / Read song list from spreadsheet</td></tr>
+        <tr><td>YouTube Data API v3</td><td>プレイリストの取得・追加・削除 / Get, add, and delete playlist items</td></tr>
+        <tr><td>Spotify Web API</td><td>プレイリストの取得・追加・削除 / Get, add, and delete playlist items</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+<footer>
+  <p>
+    <a href="https://github.com/Yuzucchi-cist/Assigned-song-playlist-manager">GitHub Repository</a>
+    &nbsp;|&nbsp;
+    License: ISC
+  </p>
+</footer>
+
+</body>
+</html>
