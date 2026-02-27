@@ -64,6 +64,9 @@
       "@/http": [
         "<rootDir>/src/util/http/WrappedHttpClient.local"
       ],
+      "@/googleToken": [
+        "<rootDir>/src/util/auth/googleToken.local"
+      ],
       "^#/(.+)$": "<rootDir>/src/$1"
     },
     "setupFiles": [
