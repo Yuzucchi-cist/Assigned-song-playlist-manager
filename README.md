@@ -137,6 +137,27 @@ npm run deploy:prod
 
 ---
 
+## Spotify の再認可 / Spotify Re-authorization
+
+リフレッシュトークンが失効（`invalid_grant: Refresh token revoked`）した場合は、Web アプリ経由で再認可できます。
+
+When the refresh token is revoked, re-authorize via the deployed web app.
+
+### 初回のみ / One-time setup
+
+1. GAS エディタで「デプロイ」→「新しいデプロイ」→ 種類「ウェブアプリ」（次のユーザーとして実行: 自分 / アクセスできるユーザー: 自分のみ）
+2. 発行された Web アプリ URL（`https://script.google.com/macros/s/.../exec`）を [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) の対象アプリの **Redirect URIs** に登録
+
+### 再認可のたび / Each re-authorization
+
+1. Web アプリ URL をブラウザで開く
+2. 表示されたリンクから Spotify の同意画面で認可する
+3. トークンが自動的に Script Properties に保存されるので、スクリプトを再実行する
+
+コードを更新した場合は「デプロイを管理」から既存デプロイを新バージョンに更新すると URL を変えずに済みます。
+
+---
+
 ## ライセンス / License
 
 ISC
