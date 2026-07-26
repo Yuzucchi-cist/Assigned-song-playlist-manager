@@ -104,7 +104,7 @@ export class SpotifyService implements PlaylistManager {
             this.token_endpoint,
             options,
             SpotifyAuthTokenResponseSchema,
-            "https://accounts.spotify.com/authorize?response_type=code&scope=playlist-modify-public%20user-read-private&redirect_uri=https://example.com/callback&client_id=${this.client_id}",
+            `https://accounts.spotify.com/authorize?response_type=code&scope=playlist-modify-public%20user-read-private&redirect_uri=${encodeURIComponent(this.redirect_uri)}&client_id=${this.client_id}`,
         );
     }
 
